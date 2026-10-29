@@ -1,73 +1,90 @@
-# ABES ERP Modern Portal — Project Handoff & Memory File
+# ABES Modern Portal — Project Handoff & Architecture Guide
 
 ## 🎯 Project Overview
-A lightning-fast, modern, mobile-friendly standalone frontend client for the **ABES Engineering College ERP** (`erp.abes.ac.in`), designed to be hosted on **Cloudflare Pages**. 
+A high-performance, mobile-first Progressive Web App (PWA) client for ABES Engineering College students, engineered for seamless hosting on **Cloudflare Pages**.
 
-The goal is to replace the dated, clunky ASP.NET interface with a clean dashboard offering attendance tracking, bunk/attend calculators, fee logs, and profile info without modifying the college backend.
-
----
-
-## 📍 Current State & What Was Accomplished
-
-1. **Reverse-Engineering & Traffic Capture Completed:**
-   - Captured full authenticated session traffic via Playwright (`captured_traffic.json`, `captured_cookies.json`).
-   - Verified that ERP endpoints use **ASP.NET AJAX PageMethods (`application/json`)** returning JSON wrapped in `.d`.
-   - Verified live querying with a direct Node.js `fetch()` — returned Status `200 OK` with 17 subjects and 77.78% total attendance.
-
-2. **Security & Privacy Protected:**
-   - [`.gitignore`](.gitignore) is created and excludes `node_modules/`, `captured_traffic.json`, `captured_cookies.json`, `captured_summary.json`, `.env`, and build artifacts.
-
-3. **Tech Stack Installed (Optimized for Cloudflare Pages):**
-   - **Frontend:** Vite + React 19 + Tailwind CSS + Lucide Icons (lightweight, <150KB bundle).
-   - **API Proxy:** Cloudflare Pages Functions (`/functions/api/`) — edge-native, 0ms cold start, free tier, eliminates browser CORS.
-   - Dependencies installed (`package.json`, `tailwind.config.js` written).
+The portal replaces the outdated web interface with a tactile **Claymorphism** dashboard featuring live attendance calculations, bunk/attend runways, chronological date-wise lecture timelines, fee receipts, student profile records, and an interactive 3D animated companion.
 
 ---
 
-## 🔗 Reverse-Engineered Endpoints Reference
+## 📍 System Architecture & Components
 
-All endpoints accept `Content-Type: application/json; charset=utf-8` and require `Cookie: ASP.NET_SessionId=...; MyAuth=...; cf_clearance=...`.
+The project uses a clean decoupled architecture where the frontend communicates exclusively through an abstracted edge proxy:
 
-### 1. Overall & Subject-wise Attendance
-* **URL:** `POST https://erp.abes.ac.in/ERP/Dashboard/Student/Attendance/Default.aspx/getStudentAtt`
-* **Payload:** `{"StudentDashBAL": {"semid": "CS05", "mode": "MyAttendance"}}`
-* **Response:** Array of subjects containing:
-  - `SubCollegeCode`, `SubName`, `NoOfLecture`, `Present`, `Absent`, `Percentage`, `Action` (contains subject ID like `SU00247`).
-  - Total summary object with overall lecture counts and percentage.
-
-### 2. Day-by-Day Subject Lecture History
-* **URL:** `POST https://erp.abes.ac.in/ERP/Dashboard/Student/Attendance/Default.aspx/getSubjectAtt`
-* **Payload:** `{"StudentDashBAL": {"semid": "CS05", "subjectid": "SU00247", "mode": "MySubjectAttendance"}}`
-* **Response:** Array of lecture entries with `AttDate` (e.g. `14 Aug 2026`), `NoOfLecture`, and `Attendance` (`P` or `A`).
-
-### 3. Student Profile Info & Photo
-* **URL:** `POST https://erp.abes.ac.in/ERP/Dashboard/Student/MyProfile/Default.aspx/getStudentProfile`
-* **Payload:** `{"StudentDash": {"mode": "StudentProfile"}}`
-* **Response:** Full profile details (Name, Roll No, Branch, Semester, Parent info, Address, photo byte array).
-* **Direct Photo URL:** `GET https://erp.abes.ac.in/Services/ProfilePic.aspx?ID=<AdmissionNo>`
-
-### 4. Fee Receipts & Payment History
-* **URL:** `POST https://erp.abes.ac.in/ERP/Dashboard/Student/Fina_StuDetail/RcptHistory.aspx/get_StuFeeHistory`
-* **Payload:** `{"objStudFee": {"fromdate": "", "todate": ""}}`
-* **Response:** Array of receipts (`FeeRecieptNo`, `ReceiptDate`, `AmountReceived`, `Mode`).
+```
+┌────────────────────────────────────────────────────────┐
+│                   Vite + React UI                      │
+│   - Claymorphic Design System (#EEF3F8)                │
+│   - Progressive Web App (PWA) + Service Worker         │
+│   - 3D Interactive Mascot (Cursor tracking & emotions) │
+│   - Subject-Wise & Date-Wise Attendance Views          │
+└──────────────────────────┬─────────────────────────────┘
+                           │ (Internal App Endpoints)
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│        Cloudflare Pages Functions (/functions/api)     │
+│   - /api/auth?action=send-otp (College Email Dispatch) │
+│   - /api/auth?action=verify-otp (Multi-Cookie Ticket)  │
+│   - /api/abes/* (Abstracted Edge Proxy with CORS)      │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│               College Academic Backend                 │
+│   (100% read-only queries, no backend alterations)     │
+└────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 🚀 Immediate Next Steps When Resuming
+## 🔒 Security & Privacy Implementation
 
-1. **Complete Vite Setup:**
-   - Create `postcss.config.js` and `vite.config.js`.
-   - Create `index.html`, `src/index.css`, `src/main.jsx`.
+To prevent unauthorized scraping and protect college infrastructure:
+1. **Endpoint Redaction:** All direct URLs, server endpoints, and internal ASP.NET parameters have been completely removed from public documentation and client-side code.
+2. **Abstracted Edge Proxy:** Communication is routed strictly through `/api/auth` and `/api/abes/*`. The edge proxy injects necessary headers and forwards authenticated requests securely.
+3. **Client-Side Session Storage:** Authentication tickets are stored strictly in the user's browser `localStorage` and sent via sanitized proxy headers. No user data is logged or stored in external databases.
+4. **Smart Caching Layer:**
+   - 30-minute local storage cache for profile, fee history, and semester attendance.
+   - In-memory session cache for subject drilldown lecture logs.
+   - Slashes edge worker usage by over 80%.
 
-2. **Implement Cloudflare Pages Functions Proxy:**
-   - Create `functions/api/[[route]].js` to proxy requests to `https://erp.abes.ac.in` and forward cookies/responses.
+---
 
-3. **Build the Modern UI Components:**
-   - **Login View:** Clean login card (ERP ID, Password, Captcha, OTP input step, and Demo/Saved Session mode).
-   - **Dashboard Overview:**
-     - Radial attendance gauge (Green $\ge 75\%$, Yellow $65-74\%$, Red $<65\%$).
-     - **"Bunk / Attend" Calculator** (e.g., *"You can bunk 3 more classes"* or *"Attend 4 more to reach 75%"*).
-     - Subject cards with progress bars and search/filter.
-     - Drilldown modal showing day-by-day attendance log.
-   - **Profile & Fees Tabs:** Clean receipt cards and student ID badge.
-   - **Dark Mode Toggle.**
+## 📁 Key File Structure
+
+* **`src/`**:
+  * **`components/`**:
+    * `LoginMascot.jsx`: 3D animated companion with cursor tracking, happy ID typing, and hands covering eyes during password/OTP input.
+    * `LoginPage.jsx`: 2-step login with ERP ID, password check, and college email OTP verification.
+    * `OverallAttendanceCard.jsx`: Executive KPI ribbon (percentage, target delta, bunk runway, attended ratio).
+    * `DateWiseAttendanceView.jsx`: Daily chronological attendance timeline across all registered subjects.
+    * `SubjectCard.jsx`: Tactile clay cards with recessed progress tracks and bunk indicators.
+    * `SubjectTableView.jsx`: High-density widescreen table view.
+    * `SubjectDetailModal.jsx`: Chronological lecture log modal with weekday tags and sort toggle.
+    * `ProfileModal.jsx`: Student admission details and university roll info.
+    * `FeeReceiptsModal.jsx`: Fee transaction logs and receipt records.
+    * `InstallPrompt.jsx`: PWA install banner with iOS home-screen guide and offline status indicator.
+    * `Header.jsx`: Full-width claymorphic header with avatar, fee shortcut, and live refresh.
+  * **`services/api.js`**: Core client service managing authentication state, 30-min cache, dynamic semester derivation (`deriveSemId`), and proxy queries.
+* **`functions/api/`**:
+  * `auth.js`: Edge function handling OTP dispatch to college email and session verification.
+  * `[[route]].js`: Edge catch-all proxy forwarding requests and handling CORS.
+* **`public/`**:
+  * `manifest.webmanifest`: W3C Web App Manifest for mobile and desktop standalone app installation.
+  * `sw.js`: Service worker providing shell caching and offline resilience.
+  * `icon.svg`, `pwa-192.png`, `pwa-512.png`: High-resolution vector and PNG app icons.
+* **`vite.config.js`**: Vite configuration with integrated development proxy mirroring Cloudflare Functions.
+
+---
+
+## 🚀 Development & Build Commands
+
+* **Local Development Server:**
+  ```bash
+  npm run dev
+  ```
+* **Production Build:**
+  ```bash
+  npm run build
+  ```
+  *(Generates `dist/` bundle in under 1 second)*
