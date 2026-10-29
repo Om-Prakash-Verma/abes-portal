@@ -28,5 +28,14 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
+  ],
+  "screenshots": [
+    {
+      "src": "/preview.png",
+      "sizes": "1672x941",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "ABES Modern Student Portal Dashboard"
+    }
   ]
 }
