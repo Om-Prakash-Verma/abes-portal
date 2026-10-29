@@ -32,6 +32,22 @@ export default function LoginPage({ onLoginSuccess, isDark, onToggleDark }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [otpCooldown, setOtpCooldown] = useState(0);
+
+  // 60-Second Cooldown countdown timer to protect Worker quota & prevent spam
+  useEffect(() => {
+    if (otpCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setOtpCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [otpCooldown]);
 
   // Manual cookie fallback toggle
   const [showCookieFallback, setShowCookieFallback] = useState(false);
@@ -39,9 +55,14 @@ export default function LoginPage({ onLoginSuccess, isDark, onToggleDark }) {
 
   // Handle Step 1: Request OTP
   const handleRequestOtp = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     setError('');
     setSuccessMsg('');
+
+    if (otpCooldown > 0) {
+      setError(`Please wait ${otpCooldown} seconds before requesting a new OTP.`);
+      return;
+    }
 
     if (!username.trim() || !password) {
       setError('Please enter your ERP ID and Password.');
@@ -54,6 +75,7 @@ export default function LoginPage({ onLoginSuccess, isDark, onToggleDark }) {
       setAuthHandshake(data);
       setSuccessMsg(data.message || 'OTP has been sent to your official college email ID!');
       setStep(2);
+      setOtpCooldown(60); // Start 60-second cooldown
     } catch (err) {
       setError(err.message);
     } finally {
@@ -221,13 +243,18 @@ export default function LoginPage({ onLoginSuccess, isDark, onToggleDark }) {
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || otpCooldown > 0}
                 className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-extrabold text-xs sm:text-sm text-white bg-indigo-600 hover:bg-indigo-700 shadow-clay-primary active:scale-[0.98] transition mt-2 disabled:opacity-50"
               >
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span>Verifying with ABES Server...</span>
+                  </>
+                ) : otpCooldown > 0 ? (
+                  <>
+                    <Mail className="w-4 h-4" />
+                    <span>Resend available in {otpCooldown}s</span>
                   </>
                 ) : (
                   <>
@@ -304,10 +331,10 @@ export default function LoginPage({ onLoginSuccess, isDark, onToggleDark }) {
                 <button
                   type="button"
                   onClick={handleRequestOtp}
-                  disabled={loading}
-                  className="text-xs text-indigo-600 hover:underline font-bold"
+                  disabled={loading || otpCooldown > 0}
+                  className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-bold disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed"
                 >
-                  Resend OTP
+                  {otpCooldown > 0 ? `Resend OTP in ${otpCooldown}s` : 'Resend OTP'}
                 </button>
               </div>
             </form>

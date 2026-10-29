@@ -9,7 +9,16 @@ import ProfileModal from './components/ProfileModal';
 import FeeReceiptsModal from './components/FeeReceiptsModal';
 import InstallPrompt from './components/InstallPrompt';
 import LoginPage from './components/LoginPage';
-import { fetchProfile, fetchAttendance, deriveSemId, getAvailableSemesters, hasValidSession, clearSession } from './services/api';
+import {
+  fetchProfile,
+  fetchAttendance,
+  deriveSemId,
+  getAvailableSemesters,
+  hasValidSession,
+  clearSession,
+  getCachedItem,
+  TTL_PROFILE
+} from './services/api';
 import { Search, BookOpen, AlertTriangle, CheckCircle2, ArrowUpDown, Loader2, LayoutGrid, List, Layers, Calendar } from 'lucide-react';
 
 export default function App() {
@@ -67,8 +76,11 @@ export default function App() {
     setError('');
     setLoading(true);
     try {
-      // 1. Fetch profile (uses 30-min cache unless forceRefresh)
-      const profData = await fetchProfile(forceRefresh);
+      // 1. Fetch profile (checks 30-day cache first to save Worker invocation)
+      let profData = !forceRefresh ? getCachedItem('profile', TTL_PROFILE) : null;
+      if (!profData) {
+        profData = await fetchProfile(forceRefresh);
+      }
       setProfile(profData);
 
       // 2. Derive dynamic semester and available options
@@ -79,7 +91,7 @@ export default function App() {
       const semToLoad = targetSemId || activeSemId || derivedCurrent;
       setActiveSemId(semToLoad);
 
-      // 3. Fetch live attendance (uses 30-min cache unless forceRefresh)
+      // 3. Fetch live attendance (uses 12-hour cache unless forceRefresh)
       const attData = await fetchAttendance(semToLoad, forceRefresh);
       setAttendance(attData);
       setIsAuthenticated(true);
