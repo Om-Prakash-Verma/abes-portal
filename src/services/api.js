@@ -136,6 +136,9 @@ async function fetchErp(endpoint, method = 'POST', payload = null) {
   });
 
   if (res.status === 401 || res.status === 403) {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('abes:session_expired'));
+    }
     throw new Error('SESSION_EXPIRED');
   }
 
@@ -146,6 +149,9 @@ async function fetchErp(endpoint, method = 'POST', payload = null) {
   const json = await res.json();
 
   if (typeof json === 'string' && json.includes('Login.aspx')) {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('abes:session_expired'));
+    }
     throw new Error('SESSION_EXPIRED');
   }
 

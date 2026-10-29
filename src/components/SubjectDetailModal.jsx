@@ -14,16 +14,28 @@ import { fetchSubjectDetail } from '../services/api';
 export default function SubjectDetailModal({ subject, semId, onClose }) {
   const [lectures, setLectures] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [filter, setFilter] = useState('ALL'); // 'ALL' | 'P' | 'A'
   const [sortOrder, setSortOrder] = useState('desc'); // 'desc' (newest first) | 'asc' (oldest first)
 
-  useEffect(() => {
-    async function loadData() {
-      setLoading(true);
+  const loadData = async () => {
+    setLoading(true);
+    setError('');
+    try {
       const data = await fetchSubjectDetail(subject.subjectId, semId);
       setLectures(data);
+    } catch (err) {
+      if (err.message === 'SESSION_EXPIRED') {
+        onClose();
+      } else {
+        setError(err.message || 'Failed to load subject lecture details.');
+      }
+    } finally {
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
     loadData();
   }, [subject, semId]);
 
@@ -150,7 +162,17 @@ export default function SubjectDetailModal({ subject, semId, onClose }) {
 
         {/* Body / Scrollable Date-Wise Lecture List */}
         <div className="p-4 sm:p-6 overflow-y-auto space-y-2.5 sm:space-y-3 flex-1">
-          {loading ? (
+          {error ? (
+            <div className="py-12 px-4 text-center">
+              <p className="text-xs font-bold text-rose-600 dark:text-rose-400 mb-3">{error}</p>
+              <button
+                onClick={loadData}
+                className="clay-btn px-4 py-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+              >
+                Retry
+              </button>
+            </div>
+          ) : loading ? (
             <div className="py-16 flex flex-col items-center justify-center text-slate-400">
               <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
               <p className="text-xs font-bold text-slate-500 mt-2">Loading attendance logs...</p>

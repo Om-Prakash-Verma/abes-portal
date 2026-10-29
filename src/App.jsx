@@ -115,6 +115,21 @@ export default function App() {
     }
   }, [isAuthenticated]);
 
+  // Global listener for session expiration triggered by any ERP endpoint
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      clearSession();
+      setIsAuthenticated(false);
+      setShowFees(false);
+      setShowProfile(false);
+      setSelectedSubject(null);
+      setError('Your ABES ERP session has expired on the college server. Please log in again to refresh your credentials.');
+    };
+
+    window.addEventListener('abes:session_expired', handleSessionExpired);
+    return () => window.removeEventListener('abes:session_expired', handleSessionExpired);
+  }, []);
+
   const handleSemesterChange = (newSemId) => {
     setActiveSemId(newSemId);
     loadAllData(newSemId, false);

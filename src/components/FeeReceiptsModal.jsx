@@ -5,14 +5,26 @@ import { fetchFeeHistory } from '../services/api';
 export default function FeeReceiptsModal({ onClose }) {
   const [fees, setFees] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true);
+  const load = async () => {
+    setLoading(true);
+    setError('');
+    try {
       const data = await fetchFeeHistory();
       setFees(data);
+    } catch (err) {
+      if (err.message === 'SESSION_EXPIRED') {
+        onClose();
+      } else {
+        setError(err.message || 'Failed to retrieve fee records.');
+      }
+    } finally {
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
     load();
   }, []);
 
@@ -75,7 +87,17 @@ export default function FeeReceiptsModal({ onClose }) {
 
         {/* List of Receipts */}
         <div className="p-4 sm:p-6 overflow-y-auto space-y-2.5 sm:space-y-3.5 flex-1">
-          {loading ? (
+          {error ? (
+            <div className="py-12 px-4 text-center">
+              <p className="text-xs font-bold text-rose-600 dark:text-rose-400 mb-3">{error}</p>
+              <button
+                onClick={load}
+                className="clay-btn px-4 py-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+              >
+                Retry
+              </button>
+            </div>
+          ) : loading ? (
             <div className="py-16 flex flex-col items-center justify-center text-slate-400">
               <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
               <p className="text-xs font-bold text-slate-500 mt-2">Fetching fee records...</p>
