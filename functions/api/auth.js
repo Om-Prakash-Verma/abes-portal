@@ -142,7 +142,7 @@ async function handleSendOtp({ username, password }) {
   if (isOtpSent) {
     return jsonResponse({
       success: true,
-      message: 'OTP has been sent to your registered mobile and college email.',
+      message: 'OTP has been sent to your official college email ID.',
       viewState: newVsMatch ? newVsMatch[1] : vsMatch[1],
       sessionCookie: postCookies
     });

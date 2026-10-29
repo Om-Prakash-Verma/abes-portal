@@ -91,31 +91,21 @@ export default function LoginMascot({
         <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-28 h-16 bg-gradient-to-b from-indigo-500 to-indigo-700 rounded-t-[40px] shadow-clay-primary border-t-2 border-white/30" />
 
         {/* Mascot Head (Tactile Clay Sphere) */}
-        <div className="absolute top-5 left-1/2 -translate-x-1/2 w-32 h-28 bg-gradient-to-b from-indigo-400 via-indigo-600 to-indigo-700 rounded-[44px] shadow-2xl border-2 border-white/40 flex flex-col items-center justify-center overflow-visible">
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 w-32 h-28 bg-gradient-to-b from-indigo-400 via-indigo-600 to-indigo-700 rounded-[44px] shadow-2xl border-2 border-white/40 flex flex-col items-center justify-center overflow-visible">
           
           {/* Subtle Clay Highlight / Specular Reflection */}
-          <div className="absolute top-2 left-5 w-12 h-6 bg-white/30 rounded-full blur-[2px] transform -rotate-12" />
+          <div className="absolute top-2 left-6 w-12 h-6 bg-white/30 rounded-full blur-[2px] transform -rotate-12" />
 
-          {/* Academic Graduation Cap */}
-          <div className="absolute -top-7 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center">
-            {/* Mortarboard Diamond Top */}
-            <div className="w-24 h-11 bg-slate-800 rounded-sm shadow-xl transform rotate-[-5deg] border border-slate-700 relative flex items-center justify-center">
-              {/* Gold Button on top */}
-              <div className="w-3.5 h-3.5 rounded-full bg-amber-400 shadow-md border border-amber-300 z-10" />
-              {/* Tassel String & Tassel */}
-              <div className="absolute top-1/2 right-3 w-7 h-0.5 bg-amber-400 transform rotate-[45deg] origin-left" />
-              <div className="absolute top-5 right-1 w-2.5 h-4 bg-amber-400 rounded-sm shadow" />
-            </div>
-            {/* Skull Cap Base */}
-            <div className="w-14 h-4 bg-slate-900 rounded-b-xl -mt-1 shadow-md" />
+          {/* Cute Round Clay Ears */}
+          <div className="absolute -top-2.5 left-2.5 w-7 h-7 bg-gradient-to-b from-indigo-400 to-indigo-600 rounded-full border-2 border-white/30 shadow-md flex items-center justify-center">
+            <div className="w-3.5 h-3.5 bg-indigo-300/60 rounded-full" />
+          </div>
+          <div className="absolute -top-2.5 right-2.5 w-7 h-7 bg-gradient-to-b from-indigo-400 to-indigo-600 rounded-full border-2 border-white/30 shadow-md flex items-center justify-center">
+            <div className="w-3.5 h-3.5 bg-indigo-300/60 rounded-full" />
           </div>
 
-          {/* Mascot Ears */}
-          <div className="absolute -top-1 -left-2 w-6 h-6 bg-indigo-500 rounded-full border-2 border-white/20 shadow-sm" />
-          <div className="absolute -top-1 -right-2 w-6 h-6 bg-indigo-500 rounded-full border-2 border-white/20 shadow-sm" />
-
           {/* Face Area */}
-          <div className="relative z-10 flex flex-col items-center mt-3">
+          <div className="relative z-10 flex flex-col items-center mt-1">
             
             {/* Eyes Row */}
             <div className="flex items-center gap-5 mt-1">

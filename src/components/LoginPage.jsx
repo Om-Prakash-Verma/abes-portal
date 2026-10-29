@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { GraduationCap, ShieldCheck, Key, ArrowRight, ArrowLeft, AlertCircle, Loader2, Eye, EyeOff, Smartphone, CheckCircle2 } from 'lucide-react';
+import { GraduationCap, ShieldCheck, Key, ArrowRight, ArrowLeft, AlertCircle, Loader2, Eye, EyeOff, Smartphone, Mail, CheckCircle2 } from 'lucide-react';
 import { sendLoginOtp, verifyLoginOtp, setStoredCookie } from '../services/api';
 import LoginMascot from './LoginMascot';
 
@@ -52,7 +52,7 @@ export default function LoginPage({ onLoginSuccess }) {
     try {
       const data = await sendLoginOtp(username.trim(), password);
       setAuthHandshake(data);
-      setSuccessMsg(data.message || 'OTP sent successfully!');
+      setSuccessMsg(data.message || 'OTP has been sent to your official college email ID!');
       setStep(2);
     } catch (err) {
       setError(err.message);
@@ -67,7 +67,7 @@ export default function LoginPage({ onLoginSuccess }) {
     setError('');
 
     if (!otp.trim()) {
-      setError('Please enter the OTP received on your mobile / email.');
+      setError('Please enter the OTP sent to your official college email ID.');
       return;
     }
 
@@ -214,8 +214,8 @@ export default function LoginPage({ onLoginSuccess }) {
                   </>
                 ) : (
                   <>
-                    <Smartphone className="w-4 h-4" />
-                    <span>Send OTP to Mobile & Email</span>
+                    <Mail className="w-4 h-4" />
+                    <span>Send OTP to College Email</span>
                   </>
                 )}
               </button>
@@ -253,7 +253,7 @@ export default function LoginPage({ onLoginSuccess }) {
                   className="w-full px-4 py-3 sm:py-3.5 text-center tracking-widest text-xl sm:text-2xl font-mono font-extrabold rounded-2xl clay-inset text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
                 />
                 <p className="text-[11px] font-medium text-slate-500 mt-2 text-center">
-                  Please check the SMS on your registered phone or college email.
+                  Please check the inbox and spam folder of your official college email ID.
                 </p>
               </div>
 

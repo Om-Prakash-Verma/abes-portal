@@ -124,7 +124,7 @@ function authDevPlugin() {
                 res.statusCode = 200;
                 return res.end(JSON.stringify({
                   success: true,
-                  message: 'OTP has been sent to your registered mobile and college email.',
+                  message: 'OTP has been sent to your official college email ID.',
                   viewState: newVsMatch ? newVsMatch[1] : vsMatch[1],
                   sessionCookie: postCookies
                 }));
