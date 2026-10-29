@@ -42,8 +42,10 @@ Total production bundle is under **90 KB (gzipped)** with a sub-second initial l
 * **Fee Payment Statement:** Review fee transaction history, dates, receipt numbers, payment modes, and clearance status.
 * **Verified Profile Card:** View student admission details, university roll number, father's name, branch, and dynamic semester.
 
-### 🧱 6. Tactile Claymorphism Aesthetic
-* Designed with soft pillowy clay surfaces, multi-layered ambient drop shadows, and inset progress tracks on a calming `#EEF3F8` backdrop.
+### 🧱 6. Tactile Claymorphism & OLED Black Dark Mode
+* **Light Mode:** Designed with soft pillowy clay surfaces, multi-layered ambient drop shadows, and inset progress tracks on a calming `#EEF3F8` backdrop.
+* **OLED Black Dark Mode:** Deep, true-black (`#000000`) theme with glowing indigo accents and high-contrast dark clay cards, perfect for battery saving and night study sessions.
+* **Theme Persistence:** Seamless toggle available on both the login screen and authenticated dashboard header, synced with system preferences and persisted in local storage.
 * Optimized for touch devices with safe-area spacing and bottom-sheet drawers on mobile viewports.
 
 ---

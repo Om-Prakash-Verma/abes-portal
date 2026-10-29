@@ -21,6 +21,25 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Dark mode state (OLED Black #000000 theme)
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem('abes_theme');
+    if (saved) return saved === 'dark';
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('abes_theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('abes_theme', 'light');
+    }
+  }, [isDark]);
+
+  const toggleTheme = () => setIsDark(prev => !prev);
+
   // Primary perspective: 'subject' (Subject-wise view) | 'date' (Date-wise daily view)
   const [viewPerspective, setViewPerspective] = useState('subject');
 
@@ -94,7 +113,13 @@ export default function App() {
   };
 
   if (!isAuthenticated) {
-    return <LoginPage onLoginSuccess={() => setIsAuthenticated(true)} />;
+    return (
+      <LoginPage
+        onLoginSuccess={() => setIsAuthenticated(true)}
+        isDark={isDark}
+        onToggleDark={toggleTheme}
+      />
+    );
   }
 
   // Split overall total data and individual subject cards
@@ -131,7 +156,7 @@ export default function App() {
   const safeCount = individualSubjects.filter(s => s.Percentage >= targetPercent).length;
 
   return (
-    <div className="min-h-screen bg-[#EEF3F8] text-slate-800 transition-colors flex flex-col antialiased">
+    <div className="min-h-screen bg-[#EEF3F8] dark:bg-black text-slate-800 dark:text-slate-100 transition-colors flex flex-col antialiased">
       
       {/* Header spanning full width */}
       <Header
@@ -141,6 +166,8 @@ export default function App() {
         onOpenFees={() => setShowFees(true)}
         onRefresh={() => loadAllData(activeSemId, true)}
         loading={loading}
+        isDark={isDark}
+        onToggleDark={toggleTheme}
       />
 
       {/* Main Full-Width Content Container */}
@@ -394,10 +421,10 @@ export default function App() {
       </main>
 
       {/* Claymorphic footer */}
-      <footer className="border-t border-white/60 bg-[#EEF3F8]/80 backdrop-blur py-5 text-xs text-slate-500 font-semibold">
+      <footer className="border-t border-white/60 dark:border-white/10 bg-[#EEF3F8]/80 dark:bg-black/90 backdrop-blur py-5 text-xs text-slate-500 dark:text-slate-400 font-semibold transition-colors">
         <div className="w-full px-4 sm:px-6 lg:px-8 2xl:px-12 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>ABES Engineering College • Modern Academic Portal</span>
-          <span className="text-[11px] font-mono text-slate-500">
+          <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
             Active Verified Session • Cloudflare Edge Proxy
           </span>
         </div>

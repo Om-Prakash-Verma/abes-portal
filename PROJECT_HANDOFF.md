@@ -14,7 +14,7 @@ The project uses a clean decoupled architecture where the frontend communicates 
 ```
 ┌────────────────────────────────────────────────────────┐
 │                   Vite + React UI                      │
-│   - Claymorphic Design System (#EEF3F8)                │
+│   - Claymorphic Design System (#EEF3F8 & OLED #000000) │
 │   - Progressive Web App (PWA) + Service Worker         │
 │   - 3D Interactive Mascot (Cursor tracking & emotions) │
 │   - Subject-Wise & Date-Wise Attendance Views          │

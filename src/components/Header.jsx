@@ -1,9 +1,9 @@
 import React from 'react';
-import { GraduationCap, RefreshCw, LogOut, Receipt } from 'lucide-react';
+import { GraduationCap, RefreshCw, LogOut, Receipt, Sun, Moon } from 'lucide-react';
 
-export default function Header({ profile, onLogout, onOpenProfile, onOpenFees, onRefresh, loading }) {
+export default function Header({ profile, onLogout, onOpenProfile, onOpenFees, onRefresh, loading, isDark, onToggleDark }) {
   return (
-    <header className="sticky top-0 z-40 backdrop-blur-md bg-[#EEF3F8]/90 border-b border-white/60 transition-colors">
+    <header className="sticky top-0 z-40 backdrop-blur-md bg-[#EEF3F8]/90 dark:bg-black/90 border-b border-white/60 dark:border-white/10 transition-colors">
       <div className="w-full px-3.5 sm:px-6 lg:px-8 2xl:px-12 h-16 sm:h-18 flex items-center justify-between gap-2 sm:gap-4">
         
         {/* Brand & Academic Meta */}
@@ -31,6 +31,15 @@ export default function Header({ profile, onLogout, onOpenProfile, onOpenFees, o
         {/* Right Actions */}
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           
+          {/* Dark / Light Mode Toggle */}
+          <button
+            onClick={onToggleDark}
+            className="clay-btn p-2 text-slate-700 dark:text-amber-400 hover:text-indigo-600 dark:hover:text-amber-300"
+            title={isDark ? "Switch to Light Mode" : "Switch to Black Dark Mode"}
+          >
+            {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
+          </button>
+
           {/* Fee Receipts Button */}
           <button
             onClick={onOpenFees}

@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { GraduationCap, ShieldCheck, Key, ArrowRight, ArrowLeft, AlertCircle, Loader2, Eye, EyeOff, Smartphone, Mail, CheckCircle2 } from 'lucide-react';
+import { GraduationCap, ShieldCheck, Key, ArrowRight, ArrowLeft, AlertCircle, Loader2, Eye, EyeOff, Smartphone, Mail, CheckCircle2, Sun, Moon } from 'lucide-react';
 import { sendLoginOtp, verifyLoginOtp, setStoredCookie } from '../services/api';
 import LoginMascot from './LoginMascot';
 
-export default function LoginPage({ onLoginSuccess }) {
+export default function LoginPage({ onLoginSuccess, isDark, onToggleDark }) {
   const [step, setStep] = useState(1); // 1 = credentials, 2 = OTP
 
   // Form inputs
@@ -100,14 +100,25 @@ export default function LoginPage({ onLoginSuccess }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#EEF3F8] flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#EEF3F8] dark:bg-black transition-colors flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8 relative">
       
+      {/* Floating Theme Toggle on Login Screen */}
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-30">
+        <button
+          onClick={onToggleDark}
+          className="clay-btn p-2.5 text-slate-700 dark:text-amber-400 hover:text-indigo-600 dark:hover:text-amber-300"
+          title={isDark ? "Switch to Light Mode" : "Switch to Black Dark Mode"}
+        >
+          {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
+        </button>
+      </div>
+
       {/* Brand Header */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           ABES Portal
         </h2>
-        <p className="mt-1 text-xs sm:text-sm text-slate-500 font-medium px-2">
+        <p className="mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium px-2">
           Modern academic & attendance portal for ABES students
         </p>
       </div>
@@ -135,14 +146,14 @@ export default function LoginPage({ onLoginSuccess }) {
         <div className="clay-card py-6 sm:py-8 px-5 sm:px-9 pt-9 sm:pt-10">
           
           {/* Official ERP Credentials Notice */}
-          <div className="mb-4 sm:mb-5 p-2.5 sm:p-3 rounded-xl bg-indigo-50/90 border border-indigo-100 flex items-center gap-2 text-[11px] sm:text-xs font-bold text-indigo-900">
+          <div className="mb-4 sm:mb-5 p-2.5 sm:p-3 rounded-xl bg-indigo-50/90 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 flex items-center gap-2 text-[11px] sm:text-xs font-bold text-indigo-900 dark:text-indigo-200">
             <ShieldCheck className="w-4 h-4 text-indigo-600 shrink-0" />
             <span>Login credentials are your original ABES ERP portal login details.</span>
           </div>
 
           {/* Error Message Alert */}
           {error && (
-            <div className="mb-4 sm:mb-5 p-3 sm:p-3.5 rounded-2xl bg-rose-100 text-rose-800 shadow-clay-danger flex items-start gap-2.5 text-xs font-bold">
+            <div className="mb-4 sm:mb-5 p-3 sm:p-3.5 rounded-2xl bg-rose-100 dark:bg-rose-950/40 text-rose-800 dark:text-rose-200 shadow-clay-danger flex items-start gap-2.5 text-xs font-bold">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
               <span>{error}</span>
             </div>
@@ -150,7 +161,7 @@ export default function LoginPage({ onLoginSuccess }) {
 
           {/* Success Message Alert */}
           {successMsg && step === 2 && (
-            <div className="mb-4 sm:mb-5 p-3 sm:p-3.5 rounded-2xl bg-emerald-100 text-emerald-800 shadow-clay-success flex items-start gap-2.5 text-xs font-bold">
+            <div className="mb-4 sm:mb-5 p-3 sm:p-3.5 rounded-2xl bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 shadow-clay-success flex items-start gap-2.5 text-xs font-bold">
               <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
               <span>{successMsg}</span>
             </div>
