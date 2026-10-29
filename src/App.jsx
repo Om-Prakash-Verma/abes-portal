@@ -34,12 +34,12 @@ export default function App() {
   const [showProfile, setShowProfile] = useState(false);
   const [showFees, setShowFees] = useState(false);
 
-  const loadAllData = async (targetSemId) => {
+  const loadAllData = async (targetSemId, forceRefresh = false) => {
     setError('');
     setLoading(true);
     try {
-      // 1. Fetch profile first
-      const profData = await fetchProfile();
+      // 1. Fetch profile (uses 30-min cache unless forceRefresh)
+      const profData = await fetchProfile(forceRefresh);
       setProfile(profData);
 
       // 2. Derive dynamic semester and available options
@@ -50,8 +50,8 @@ export default function App() {
       const semToLoad = targetSemId || activeSemId || derivedCurrent;
       setActiveSemId(semToLoad);
 
-      // 3. Fetch live attendance for this student & semester
-      const attData = await fetchAttendance(semToLoad);
+      // 3. Fetch live attendance (uses 30-min cache unless forceRefresh)
+      const attData = await fetchAttendance(semToLoad, forceRefresh);
       setAttendance(attData);
       setIsAuthenticated(true);
     } catch (e) {
@@ -70,13 +70,13 @@ export default function App() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      loadAllData();
+      loadAllData(activeSemId, false);
     }
   }, [isAuthenticated]);
 
   const handleSemesterChange = (newSemId) => {
     setActiveSemId(newSemId);
-    loadAllData(newSemId);
+    loadAllData(newSemId, false);
   };
 
   const handleLogout = () => {
@@ -134,7 +134,7 @@ export default function App() {
         onLogout={handleLogout}
         onOpenProfile={() => setShowProfile(true)}
         onOpenFees={() => setShowFees(true)}
-        onRefresh={() => loadAllData(activeSemId)}
+        onRefresh={() => loadAllData(activeSemId, true)}
         loading={loading}
       />
 
@@ -145,7 +145,7 @@ export default function App() {
         {error && (
           <div className="p-4 rounded-2xl bg-rose-100 text-rose-800 shadow-clay-danger flex items-center justify-between text-xs font-bold">
             <span>{error}</span>
-            <button onClick={() => loadAllData(activeSemId)} className="font-extrabold underline ml-2">Retry</button>
+            <button onClick={() => loadAllData(activeSemId, true)} className="font-extrabold underline ml-2">Retry</button>
           </div>
         )}
 

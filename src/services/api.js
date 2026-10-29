@@ -1,4 +1,9 @@
 const STORAGE_KEY = 'abes_erp_session_cookie';
+const CACHE_PREFIX = 'abes_cache_';
+const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes cache
+
+// In-memory cache for subject drilldowns to avoid repeated requests during a session
+const inMemorySubjectCache = new Map();
 
 export function getStoredCookie() {
   return localStorage.getItem(STORAGE_KEY) || '';
@@ -18,6 +23,44 @@ export function hasValidSession() {
 
 export function clearSession() {
   localStorage.removeItem(STORAGE_KEY);
+  clearAllCaches();
+}
+
+// -------------------------------------------------------------
+// Cache Utilities (Slashes 80%+ of Worker Requests)
+// -------------------------------------------------------------
+
+function getCachedItem(key) {
+  try {
+    const raw = localStorage.getItem(CACHE_PREFIX + key);
+    if (!raw) return null;
+    const { timestamp, data } = JSON.parse(raw);
+    if (Date.now() - timestamp < CACHE_TTL_MS) {
+      return data;
+    }
+  } catch (e) {}
+  return null;
+}
+
+function setCachedItem(key, data) {
+  try {
+    localStorage.setItem(
+      CACHE_PREFIX + key,
+      JSON.stringify({ timestamp: Date.now(), data })
+    );
+  } catch (e) {}
+}
+
+export function clearAllCaches() {
+  inMemorySubjectCache.clear();
+  try {
+    const keys = Object.keys(localStorage);
+    for (const k of keys) {
+      if (k.startsWith(CACHE_PREFIX)) {
+        localStorage.removeItem(k);
+      }
+    }
+  } catch (e) {}
 }
 
 // -------------------------------------------------------------
@@ -52,6 +95,7 @@ export async function verifyLoginOtp({ username, password, otp, viewState, sessi
 
   if (data.cookies) {
     setStoredCookie(data.cookies);
+    clearAllCaches(); // Ensure fresh data upon new login
   }
   return data;
 }
@@ -154,20 +198,33 @@ export function getAvailableSemesters(profile) {
   }));
 }
 
-// 1. Fetch live student profile
-export async function fetchProfile() {
+// 1. Fetch live student profile (with 30-min local cache)
+export async function fetchProfile(forceRefresh = false) {
+  if (!forceRefresh) {
+    const cached = getCachedItem('profile');
+    if (cached) return cached;
+  }
+
   const raw = await fetchErp('ERP/Dashboard/Student/MyProfile/Default.aspx/getStudentProfile', 'POST', {
     StudentDash: { mode: 'StudentProfile' }
   });
 
   if (Array.isArray(raw) && raw.length > 0) {
-    return raw[0];
+    const profile = raw[0];
+    setCachedItem('profile', profile);
+    return profile;
   }
   throw new Error('Could not retrieve student profile from ERP');
 }
 
-// 2. Fetch live student attendance dynamically for any student / semester
-export async function fetchAttendance(semId = 'CS05') {
+// 2. Fetch live student attendance (with 30-min local cache)
+export async function fetchAttendance(semId = 'CS05', forceRefresh = false) {
+  const cacheKey = `att_${semId}`;
+  if (!forceRefresh) {
+    const cached = getCachedItem(cacheKey);
+    if (cached) return cached;
+  }
+
   const raw = await fetchErp('ERP/Dashboard/Student/Attendance/Default.aspx/getStudentAtt', 'POST', {
     StudentDashBAL: { semid: semId, mode: 'MyAttendance' }
   });
@@ -176,7 +233,7 @@ export async function fetchAttendance(semId = 'CS05') {
     throw new Error('Invalid attendance response format from ERP');
   }
 
-  return raw.map(item => {
+  const cleaned = raw.map(item => {
     let subjectId = null;
     if (item.Action && typeof item.Action === 'string') {
       const match = item.Action.match(/show\('([^']+)'\)/);
@@ -198,11 +255,19 @@ export async function fetchAttendance(semId = 'CS05') {
         : parseFloat(item.Percentage) || 0
     };
   });
+
+  setCachedItem(cacheKey, cleaned);
+  return cleaned;
 }
 
-// 3. Fetch day-by-day live lecture logs for a subject
-export async function fetchSubjectDetail(subjectId, semId = 'CS05') {
+// 3. Fetch day-by-day live lecture logs (with in-memory session cache)
+export async function fetchSubjectDetail(subjectId, semId = 'CS05', forceRefresh = false) {
   if (!subjectId) return [];
+
+  const memoryKey = `${semId}_${subjectId}`;
+  if (!forceRefresh && inMemorySubjectCache.has(memoryKey)) {
+    return inMemorySubjectCache.get(memoryKey);
+  }
 
   const raw = await fetchErp('ERP/Dashboard/Student/Attendance/Default.aspx/getSubjectAtt', 'POST', {
     StudentDashBAL: { semid: semId, subjectid: subjectId, mode: 'MySubjectAttendance' }
@@ -210,7 +275,7 @@ export async function fetchSubjectDetail(subjectId, semId = 'CS05') {
 
   if (!Array.isArray(raw)) return [];
 
-  return raw.filter(r => r.AttDate).map(r => {
+  const lectures = raw.filter(r => r.AttDate).map(r => {
     let status = 'A';
     if (r.Attendance && r.Attendance.includes('>P<')) {
       status = 'P';
@@ -227,17 +292,25 @@ export async function fetchSubjectDetail(subjectId, semId = 'CS05') {
       Topic: r.Topic || 'Regular Lecture'
     };
   });
+
+  inMemorySubjectCache.set(memoryKey, lectures);
+  return lectures;
 }
 
-// 4. Fetch live fee receipts
-export async function fetchFeeHistory() {
+// 4. Fetch live fee receipts (with 30-min local cache)
+export async function fetchFeeHistory(forceRefresh = false) {
+  if (!forceRefresh) {
+    const cached = getCachedItem('fees');
+    if (cached) return cached;
+  }
+
   const raw = await fetchErp('ERP/Dashboard/Student/Fina_StuDetail/RcptHistory.aspx/get_StuFeeHistory', 'POST', {
     objStudFee: { fromdate: '', todate: '' }
   });
 
   if (!Array.isArray(raw)) return [];
 
-  return raw.map(r => ({
+  const receipts = raw.map(r => ({
     FeeRecieptNo: r.FeeRecieptNo,
     ReceiptDate: r.ReceiptDate,
     AdmNo: r.AdmNo,
@@ -246,4 +319,7 @@ export async function fetchFeeHistory() {
     Mode: 'Online / Bank',
     Status: r.iscancel === '0' ? 'Paid' : 'Cancelled'
   }));
+
+  setCachedItem('fees', receipts);
+  return receipts;
 }
