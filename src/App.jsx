@@ -17,7 +17,8 @@ import {
   hasValidSession,
   clearSession,
   getCachedItem,
-  TTL_PROFILE
+  TTL_PROFILE,
+  getSessionRemainingSeconds
 } from './services/api';
 import { Search, BookOpen, AlertTriangle, CheckCircle2, ArrowUpDown, Loader2, LayoutGrid, List, Layers, Calendar } from 'lucide-react';
 
@@ -29,6 +30,34 @@ export default function App() {
   const [activeSemId, setActiveSemId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [sessionRemainingSec, setSessionRemainingSec] = useState(() => getSessionRemainingSeconds());
+
+  // 20-minute Microsoft IIS ASP.NET ERP Session Timeout Tracker
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    setSessionRemainingSec(getSessionRemainingSeconds());
+
+    const timer = setInterval(() => {
+      const remaining = getSessionRemainingSeconds();
+      setSessionRemainingSec(remaining);
+
+      if (remaining <= 0) {
+        clearSession();
+        setIsAuthenticated(false);
+        setProfile({});
+        setAttendance([]);
+        setAvailableSemesters([]);
+        setActiveSemId('');
+        setShowFees(false);
+        setShowProfile(false);
+        setSelectedSubject(null);
+        setError('Your 20-minute college ERP session has expired for security (Microsoft ASP.NET IIS timeout). Fast Login is ready — tap "Send OTP" to reconnect!');
+      }
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, [isAuthenticated]);
 
   // Dark mode state (OLED Black #000000 theme)
   const [isDark, setIsDark] = useState(() => {
@@ -207,6 +236,7 @@ export default function App() {
         loading={loading}
         isDark={isDark}
         onToggleDark={toggleTheme}
+        sessionRemainingSec={sessionRemainingSec}
       />
 
       {/* Main Full-Width Content Container */}

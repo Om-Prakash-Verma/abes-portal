@@ -10,7 +10,8 @@ import {
   ChevronDown,
   Sparkles,
   ShieldCheck,
-  Check
+  Check,
+  Clock
 } from 'lucide-react';
 
 export default function Header({
@@ -21,10 +22,18 @@ export default function Header({
   onRefresh,
   loading,
   isDark,
-  onToggleDark
+  onToggleDark,
+  sessionRemainingSec = 0
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
+
+  const formatTimer = (s) => {
+    if (!s || s <= 0) return 'Expired';
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m}m ${sec < 10 ? '0' : ''}${sec}s`;
+  };
 
   // Close dropdown when clicking outside or pressing Escape
   useEffect(() => {
@@ -194,6 +203,23 @@ export default function Header({
                     <span className="inline-flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                       Active Verified
+                    </span>
+                  </div>
+
+                  <div className="mt-2 flex items-center justify-between text-[11px]">
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">ERP Session Life</span>
+                    <span
+                      className={`inline-flex items-center gap-1 font-mono font-bold ${
+                        sessionRemainingSec > 300
+                          ? 'text-indigo-600 dark:text-indigo-400'
+                          : sessionRemainingSec > 60
+                          ? 'text-amber-600 dark:text-amber-400'
+                          : 'text-rose-600 dark:text-rose-400 animate-pulse'
+                      }`}
+                      title="Microsoft IIS ASP.NET 20-minute server session expiration clock"
+                    >
+                      <Clock className="w-3 h-3" />
+                      <span>{formatTimer(sessionRemainingSec)}</span>
                     </span>
                   </div>
                 </div>

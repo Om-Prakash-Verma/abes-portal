@@ -1,6 +1,29 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GraduationCap, ShieldCheck, Key, ArrowRight, ArrowLeft, AlertCircle, Loader2, Eye, EyeOff, Smartphone, Mail, CheckCircle2, Sun, Moon } from 'lucide-react';
-import { sendLoginOtp, verifyLoginOtp, setStoredCookie } from '../services/api';
+import {
+  GraduationCap,
+  ShieldCheck,
+  Key,
+  ArrowRight,
+  ArrowLeft,
+  AlertCircle,
+  Loader2,
+  Eye,
+  EyeOff,
+  Smartphone,
+  Mail,
+  CheckCircle2,
+  Sun,
+  Moon,
+  Sparkles
+} from 'lucide-react';
+import {
+  sendLoginOtp,
+  verifyLoginOtp,
+  setStoredCookie,
+  getSavedCredentials,
+  setSavedCredentials,
+  clearSavedCredentials
+} from '../services/api';
 import LoginMascot from './LoginMascot';
 
 export default function LoginPage({ onLoginSuccess, isDark, onToggleDark }) {
@@ -11,6 +34,28 @@ export default function LoginPage({ onLoginSuccess, isDark, onToggleDark }) {
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // Saved credentials (Fast Login)
+  const [rememberMe, setRememberMe] = useState(true);
+  const [hasSavedCreds, setHasSavedCreds] = useState(false);
+
+  useEffect(() => {
+    const saved = getSavedCredentials();
+    if (saved && saved.username && saved.password) {
+      setUsername(saved.username);
+      setPassword(saved.password);
+      setHasSavedCreds(true);
+      setRememberMe(true);
+    }
+  }, []);
+
+  const handleForgetCredentials = (e) => {
+    if (e) e.preventDefault();
+    clearSavedCredentials();
+    setUsername('');
+    setPassword('');
+    setHasSavedCreds(false);
+  };
 
   // Mascot interaction state
   const [focusedField, setFocusedField] = useState(null); // 'username' | 'password' | 'otp' | null
@@ -102,6 +147,13 @@ export default function LoginPage({ onLoginSuccess, isDark, onToggleDark }) {
         viewState: authHandshake?.viewState,
         sessionCookie: authHandshake?.sessionCookie
       });
+
+      if (rememberMe) {
+        setSavedCredentials(username.trim(), password);
+      } else {
+        clearSavedCredentials();
+      }
+
       onLoginSuccess();
     } catch (err) {
       setError(err.message);
@@ -173,6 +225,24 @@ export default function LoginPage({ onLoginSuccess, isDark, onToggleDark }) {
             <span>Login credentials are your original ABES ERP portal login details.</span>
           </div>
 
+          {/* Fast Login Detected Banner */}
+          {hasSavedCreds && step === 1 && (
+            <div className="mb-4 sm:mb-5 p-2.5 sm:p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between text-[11px] sm:text-xs font-bold text-amber-700 dark:text-amber-400">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+                <span>Fast Login: Credentials saved on this device</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleForgetCredentials}
+                className="text-[10px] text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 underline font-semibold ml-2 shrink-0"
+                title="Remove saved credentials from this browser"
+              >
+                Forget
+              </button>
+            </div>
+          )}
+
           {/* Error Message Alert */}
           {error && (
             <div className="mb-4 sm:mb-5 p-3 sm:p-3.5 rounded-2xl bg-rose-100 dark:bg-rose-950/40 text-rose-800 dark:text-rose-200 shadow-clay-danger flex items-start gap-2.5 text-xs font-bold">
@@ -241,6 +311,19 @@ export default function LoginPage({ onLoginSuccess, isDark, onToggleDark }) {
                 </div>
               </div>
 
+              {/* Remember Credentials Checkbox */}
+              <div className="flex items-center justify-between pt-0.5 pb-1">
+                <label className="flex items-center gap-2 cursor-pointer select-none text-[11px] sm:text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer accent-indigo-600"
+                  />
+                  <span>Remember credentials on this device</span>
+                </label>
+              </div>
+
               <button
                 type="submit"
                 disabled={loading || otpCooldown > 0}
@@ -255,6 +338,11 @@ export default function LoginPage({ onLoginSuccess, isDark, onToggleDark }) {
                   <>
                     <Mail className="w-4 h-4" />
                     <span>Resend available in {otpCooldown}s</span>
+                  </>
+                ) : hasSavedCreds ? (
+                  <>
+                    <Sparkles className="w-4 h-4 text-amber-300" />
+                    <span>⚡ Send OTP to College Email (Fast Login)</span>
                   </>
                 ) : (
                   <>

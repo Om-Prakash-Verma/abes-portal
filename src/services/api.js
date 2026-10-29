@@ -1,5 +1,8 @@
 const STORAGE_KEY = 'abes_erp_session_cookie';
 const CACHE_PREFIX = 'abes_cache_';
+const SAVED_CREDS_KEY = 'abes_saved_credentials';
+const SESSION_START_KEY = 'abes_session_started_at';
+export const ERP_SESSION_DURATION_MS = 20 * 60 * 1000; // 20-minute Microsoft IIS ASP.NET idle timeout
 
 // -------------------------------------------------------------
 // High-Efficiency Multi-Tier Cache Lifetimes
@@ -13,6 +16,62 @@ export const TTL_FEES = 7 * 24 * 60 * 60 * 1000;      // 7 days for financial re
 // In-memory cache for subject drilldowns to avoid repeated requests during a session
 const inMemorySubjectCache = new Map();
 
+// -------------------------------------------------------------
+// Saved Credentials (Fast 1-Tap Login)
+// -------------------------------------------------------------
+
+export function getSavedCredentials() {
+  try {
+    const raw = localStorage.getItem(SAVED_CREDS_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+export function setSavedCredentials(username, password) {
+  try {
+    if (username && password) {
+      localStorage.setItem(
+        SAVED_CREDS_KEY,
+        JSON.stringify({ username: username.trim(), password })
+      );
+    }
+  } catch (e) {}
+}
+
+export function clearSavedCredentials() {
+  localStorage.removeItem(SAVED_CREDS_KEY);
+}
+
+// -------------------------------------------------------------
+// Session Lifetime & Tracking (20-Minute Countdown)
+// -------------------------------------------------------------
+
+export function setSessionStartTime(ts = Date.now()) {
+  try {
+    localStorage.setItem(SESSION_START_KEY, ts.toString());
+  } catch (e) {}
+}
+
+export function getSessionStartTime() {
+  try {
+    const val = localStorage.getItem(SESSION_START_KEY);
+    return val ? parseInt(val, 10) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+export function getSessionRemainingSeconds() {
+  const start = getSessionStartTime();
+  if (!start) return 0;
+  const elapsed = Date.now() - start;
+  const remaining = Math.max(0, Math.floor((ERP_SESSION_DURATION_MS - elapsed) / 1000));
+  return remaining;
+}
+
 export function getStoredCookie() {
   return localStorage.getItem(STORAGE_KEY) || '';
 }
@@ -20,8 +79,10 @@ export function getStoredCookie() {
 export function setStoredCookie(cookie) {
   if (cookie && cookie.trim()) {
     localStorage.setItem(STORAGE_KEY, cookie.trim());
+    setSessionStartTime(Date.now());
   } else {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(SESSION_START_KEY);
   }
 }
 
@@ -31,6 +92,7 @@ export function hasValidSession() {
 
 export function clearSession() {
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(SESSION_START_KEY);
   clearAllCaches();
 }
 
