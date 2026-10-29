@@ -29,12 +29,17 @@ export default function App() {
   });
 
   useEffect(() => {
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
     if (isDark) {
       document.documentElement.classList.add('dark');
+      document.documentElement.style.backgroundColor = '#000000';
       localStorage.setItem('abes_theme', 'dark');
+      if (metaTheme) metaTheme.setAttribute('content', '#000000');
     } else {
       document.documentElement.classList.remove('dark');
+      document.documentElement.style.backgroundColor = '#EEF3F8';
       localStorage.setItem('abes_theme', 'light');
+      if (metaTheme) metaTheme.setAttribute('content', '#EEF3F8');
     }
   }, [isDark]);
 
