@@ -108,7 +108,7 @@ export default function LoginPage({ onLoginSuccess }) {
           ABES Portal
         </h2>
         <p className="mt-1 text-xs sm:text-sm text-slate-500 font-medium px-2">
-          Direct authentication with your official college credentials
+          Modern academic & attendance portal for ABES students
         </p>
       </div>
 
@@ -134,6 +134,12 @@ export default function LoginPage({ onLoginSuccess }) {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="clay-card py-6 sm:py-8 px-5 sm:px-9 pt-9 sm:pt-10">
           
+          {/* Official ERP Credentials Notice */}
+          <div className="mb-4 sm:mb-5 p-2.5 sm:p-3 rounded-xl bg-indigo-50/90 border border-indigo-100 flex items-center gap-2 text-[11px] sm:text-xs font-bold text-indigo-900">
+            <ShieldCheck className="w-4 h-4 text-indigo-600 shrink-0" />
+            <span>Login credentials are your original ABES ERP portal login details.</span>
+          </div>
+
           {/* Error Message Alert */}
           {error && (
             <div className="mb-4 sm:mb-5 p-3 sm:p-3.5 rounded-2xl bg-rose-100 text-rose-800 shadow-clay-danger flex items-start gap-2.5 text-xs font-bold">
@@ -169,7 +175,7 @@ export default function LoginPage({ onLoginSuccess }) {
                     setUsername(e.target.value);
                     triggerTyping();
                   }}
-                  placeholder="e.g. 2024b0101207"
+                  placeholder="Enter your ERP ID / Admission No."
                   className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-bold rounded-xl clay-inset text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
                 />
               </div>

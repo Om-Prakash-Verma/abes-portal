@@ -6,6 +6,7 @@ node_modules/
 # Environment and sensitive captured portal data
 .env
 .env*.local
+capture*.js
 captured_cookies.json
 captured_traffic.json
 captured_summary.json
