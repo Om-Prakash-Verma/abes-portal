@@ -7,6 +7,7 @@ import SubjectDetailModal from './components/SubjectDetailModal';
 import DateWiseAttendanceView from './components/DateWiseAttendanceView';
 import ProfileModal from './components/ProfileModal';
 import FeeReceiptsModal from './components/FeeReceiptsModal';
+import InstallPrompt from './components/InstallPrompt';
 import LoginPage from './components/LoginPage';
 import { fetchProfile, fetchAttendance, deriveSemId, getAvailableSemesters, hasValidSession, clearSession } from './services/api';
 import { Search, BookOpen, AlertTriangle, CheckCircle2, ArrowUpDown, Loader2, LayoutGrid, List, Layers, Calendar } from 'lucide-react';
@@ -423,6 +424,9 @@ export default function App() {
           onClose={() => setShowFees(false)}
         />
       )}
+
+      {/* PWA Install & Offline Status */}
+      <InstallPrompt />
 
     </div>
   );
