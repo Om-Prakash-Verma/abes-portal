@@ -1,11 +1,12 @@
-const CACHE_NAME = 'abes-portal-v1';
+const CACHE_NAME = 'abes-portal-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
   '/icon.svg',
   '/pwa-192.png',
-  '/pwa-512.png'
+  '/pwa-512.png',
+  '/preview.jpg'
 ];
 
 // Install: Cache critical shell assets
