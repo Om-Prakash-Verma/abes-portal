@@ -88,7 +88,7 @@ export default function App() {
       setAvailableSemesters(semsList);
 
       const derivedCurrent = deriveSemId(profData);
-      const semToLoad = targetSemId || activeSemId || derivedCurrent;
+      const semToLoad = targetSemId || derivedCurrent;
       setActiveSemId(semToLoad);
 
       // 3. Fetch live attendance (uses 12-hour cache unless forceRefresh)
@@ -120,6 +120,10 @@ export default function App() {
     const handleSessionExpired = () => {
       clearSession();
       setIsAuthenticated(false);
+      setProfile({});
+      setAttendance([]);
+      setAvailableSemesters([]);
+      setActiveSemId('');
       setShowFees(false);
       setShowProfile(false);
       setSelectedSubject(null);
@@ -147,7 +151,10 @@ export default function App() {
   if (!isAuthenticated) {
     return (
       <LoginPage
-        onLoginSuccess={() => setIsAuthenticated(true)}
+        onLoginSuccess={() => {
+          setActiveSemId('');
+          setIsAuthenticated(true);
+        }}
         isDark={isDark}
         onToggleDark={toggleTheme}
       />

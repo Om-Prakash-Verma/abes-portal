@@ -164,28 +164,64 @@ async function fetchErp(endpoint, method = 'POST', payload = null) {
 
 // Helper: Derive semid dynamically from student profile
 export function deriveSemId(profile) {
-  if (!profile) return 'CS05';
+  if (!profile) return 'CS01';
 
-  const semStr = (profile.Samester_Name || '').toLowerCase();
-  let num = '05';
-  if (semStr.includes('viii') || semStr.includes('8')) num = '08';
-  else if (semStr.includes('vii') || semStr.includes('7')) num = '07';
-  else if (semStr.includes('vi') || semStr.includes('6')) num = '06';
-  else if (semStr.includes('v') || semStr.includes('5')) num = '05';
-  else if (semStr.includes('iv') || semStr.includes('4')) num = '04';
-  else if (semStr.includes('iii') || semStr.includes('3')) num = '03';
-  else if (semStr.includes('ii') || semStr.includes('2')) num = '02';
-  else if (semStr.includes('i') || semStr.includes('1')) num = '01';
+  // Check direct semid property if ERP returns it
+  const directSemId = profile.samester_id || profile.semester_id || profile.Samester_Id || profile.Semester_Id || profile.semid || profile.SemId;
+  if (directSemId && typeof directSemId === 'string' && /^[A-Z]{2,4}\d{2}$/i.test(directSemId.trim())) {
+    return directSemId.trim().toUpperCase();
+  }
 
-  const branchStr = (profile.Branch_Name || '').toUpperCase();
+  // Find semester string across all possible profile fields
+  const semStr = (
+    profile.Samester_Name ||
+    profile.Semester_Name ||
+    profile.samester_name ||
+    profile.semester_name ||
+    profile.adm_samester_name ||
+    profile.adm_semester_name ||
+    profile.CurrentSemester ||
+    profile.Semester ||
+    profile.Samester ||
+    ''
+  ).toLowerCase();
+
+  let num = '01'; // Default to Sem 1 for incoming students
+
+  if (/\b(viii|8th|eighth|sem[-_\s]*8|semester[-_\s]*8)\b/i.test(semStr) || /\b8\b/.test(semStr)) {
+    num = '08';
+  } else if (/\b(vii|7th|seventh|sem[-_\s]*7|semester[-_\s]*7)\b/i.test(semStr) || /\b7\b/.test(semStr)) {
+    num = '07';
+  } else if (/\b(vi|6th|sixth|sem[-_\s]*6|semester[-_\s]*6)\b/i.test(semStr) || /\b6\b/.test(semStr)) {
+    num = '06';
+  } else if (/\b(v|5th|fifth|sem[-_\s]*5|semester[-_\s]*5)\b/i.test(semStr) || /\b5\b/.test(semStr)) {
+    num = '05';
+  } else if (/\b(iv|4th|fourth|sem[-_\s]*4|semester[-_\s]*4)\b/i.test(semStr) || /\b4\b/.test(semStr)) {
+    num = '04';
+  } else if (/\b(iii|3rd|third|sem[-_\s]*3|semester[-_\s]*3)\b/i.test(semStr) || /\b3\b/.test(semStr)) {
+    num = '03';
+  } else if (/\b(ii|2nd|second|sem[-_\s]*2|semester[-_\s]*2)\b/i.test(semStr) || /\b2\b/.test(semStr)) {
+    num = '02';
+  } else if (/\b(i|1st|first|sem[-_\s]*1|semester[-_\s]*1)\b/i.test(semStr) || /\b1\b/.test(semStr)) {
+    num = '01';
+  }
+
+  const branchStr = (
+    profile.Branch_Name ||
+    profile.branch_name ||
+    profile.adm_branch ||
+    profile.Program_Name ||
+    ''
+  ).toUpperCase();
+
   let branch = 'CS';
-  if (branchStr.includes('IT') || branchStr.includes('INFORMATION')) branch = 'IT';
-  else if (branchStr.includes('AIML')) branch = 'AIML';
-  else if (branchStr.includes('DS') || branchStr.includes('DATA')) branch = 'DS';
-  else if (branchStr.includes('EC') || branchStr.includes('ELECTRONIC')) branch = 'EC';
-  else if (branchStr.includes('ME') || branchStr.includes('MECHANIC')) branch = 'ME';
-  else if (branchStr.includes('EN') || branchStr.includes('ELECTRICAL')) branch = 'EN';
-  else if (branchStr.includes('CE') || branchStr.includes('CIVIL')) branch = 'CE';
+  if (/\b(IT|INFORMATION)\b/.test(branchStr)) branch = 'IT';
+  else if (/\b(AIML|AI|ARTIFICIAL)\b/.test(branchStr)) branch = 'AIML';
+  else if (/\b(DS|DATA)\b/.test(branchStr)) branch = 'DS';
+  else if (/\b(EC|ECE|ELECTRONIC|ELECTRONICS)\b/.test(branchStr)) branch = 'EC';
+  else if (/\b(ME|MECHANIC|MECHANICAL)\b/.test(branchStr)) branch = 'ME';
+  else if (/\b(EN|EEE|ELECTRICAL)\b/.test(branchStr)) branch = 'EN';
+  else if (/\b(CE|CIVIL)\b/.test(branchStr)) branch = 'CE';
 
   return `${branch}${num}`;
 }
@@ -232,7 +268,7 @@ export async function fetchProfile(forceRefresh = false) {
 }
 
 // 2. Fetch live student attendance (with 12-hour local cache)
-export async function fetchAttendance(semId = 'CS05', forceRefresh = false) {
+export async function fetchAttendance(semId = 'CS01', forceRefresh = false) {
   const cacheKey = `att_${semId}`;
   if (!forceRefresh) {
     const cached = getCachedItem(cacheKey, TTL_ATTENDANCE);
@@ -307,7 +343,7 @@ export function formatDate(dateStr) {
 }
 
 // 3. Fetch day-by-day live lecture logs (with in-memory session cache and date sorting)
-export async function fetchSubjectDetail(subjectId, semId = 'CS05', forceRefresh = false) {
+export async function fetchSubjectDetail(subjectId, semId = 'CS01', forceRefresh = false) {
   if (!subjectId) return [];
 
   const memoryKey = `${semId}_${subjectId}`;
@@ -353,7 +389,7 @@ export async function fetchSubjectDetail(subjectId, semId = 'CS05', forceRefresh
 }
 
 // 4. Fetch aggregated date-wise attendance timeline across all registered subjects (with 12-hour local cache)
-export async function fetchAllDateWiseAttendance(semId = 'CS05', subjects = [], forceRefresh = false) {
+export async function fetchAllDateWiseAttendance(semId = 'CS01', subjects = [], forceRefresh = false) {
   const validSubjects = subjects.filter(s => s.subjectId && !s.isTotal);
   if (validSubjects.length === 0) return [];
 
