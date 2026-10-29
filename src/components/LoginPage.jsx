@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { GraduationCap, ShieldCheck, Key, ArrowRight, ArrowLeft, AlertCircle, Loader2, Eye, EyeOff, Smartphone, CheckCircle2 } from 'lucide-react';
 import { sendLoginOtp, verifyLoginOtp, setStoredCookie } from '../services/api';
+import LoginMascot from './LoginMascot';
 
 export default function LoginPage({ onLoginSuccess }) {
   const [step, setStep] = useState(1); // 1 = credentials, 2 = OTP
@@ -10,6 +11,19 @@ export default function LoginPage({ onLoginSuccess }) {
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // Mascot interaction state
+  const [focusedField, setFocusedField] = useState(null); // 'username' | 'password' | 'otp' | null
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimerRef = useRef(null);
+
+  const triggerTyping = () => {
+    setIsTyping(true);
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    typingTimerRef.current = setTimeout(() => {
+      setIsTyping(false);
+    }, 350);
+  };
 
   // Stored state from Step 1
   const [authHandshake, setAuthHandshake] = useState(null);
@@ -90,10 +104,7 @@ export default function LoginPage({ onLoginSuccess }) {
       
       {/* Brand Header */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="mx-auto w-14 h-14 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl bg-indigo-600 flex items-center justify-center text-white shadow-clay-primary">
-          <GraduationCap className="w-8 h-8 sm:w-9 sm:h-9" />
-        </div>
-        <h2 className="mt-4 sm:mt-5 text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
           ABES Portal
         </h2>
         <p className="mt-1 text-xs sm:text-sm text-slate-500 font-medium px-2">
@@ -101,8 +112,27 @@ export default function LoginPage({ onLoginSuccess }) {
         </p>
       </div>
 
-      <div className="mt-6 sm:mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="clay-card py-6 sm:py-8 px-5 sm:px-9">
+      {/* 3D Animated Interactive Mascot sitting on top of the login card */}
+      <div className="sm:mx-auto sm:w-full sm:max-w-md flex justify-center -mb-7 sm:-mb-8 z-10 relative">
+        <LoginMascot
+          mode={
+            step === 2
+              ? 'otp'
+              : focusedField === 'password'
+              ? 'password'
+              : focusedField === 'username'
+              ? 'typing-id'
+              : 'idle'
+          }
+          showPassword={showPassword}
+          isTyping={isTyping}
+          hasError={Boolean(error)}
+          isLoading={loading}
+        />
+      </div>
+
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="clay-card py-6 sm:py-8 px-5 sm:px-9 pt-9 sm:pt-10">
           
           {/* Error Message Alert */}
           {error && (
@@ -133,7 +163,12 @@ export default function LoginPage({ onLoginSuccess }) {
                   autoCapitalize="none"
                   autoCorrect="off"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onFocus={() => setFocusedField('username')}
+                  onBlur={() => setFocusedField(null)}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    triggerTyping();
+                  }}
                   placeholder="e.g. 2024b0101207"
                   className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-bold rounded-xl clay-inset text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
                 />
@@ -148,7 +183,12 @@ export default function LoginPage({ onLoginSuccess }) {
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onFocus={() => setFocusedField('password')}
+                    onBlur={() => setFocusedField(null)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      triggerTyping();
+                    }}
                     placeholder="Enter your ERP password"
                     className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 pr-10 text-xs sm:text-sm font-bold rounded-xl clay-inset text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
                   />
@@ -203,7 +243,12 @@ export default function LoginPage({ onLoginSuccess }) {
                   pattern="[0-9]*"
                   maxLength={8}
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  onFocus={() => setFocusedField('otp')}
+                  onBlur={() => setFocusedField(null)}
+                  onChange={(e) => {
+                    setOtp(e.target.value.replace(/\D/g, ''));
+                    triggerTyping();
+                  }}
                   placeholder="Enter OTP (e.g. 942047)"
                   className="w-full px-4 py-3 sm:py-3.5 text-center tracking-widest text-xl sm:text-2xl font-mono font-extrabold rounded-2xl clay-inset text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
                 />
