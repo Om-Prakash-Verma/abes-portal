@@ -1,11 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { X, Calendar, BookOpen, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import {
+  X,
+  Calendar,
+  BookOpen,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  ArrowUpDown,
+  Filter
+} from 'lucide-react';
 import { fetchSubjectDetail } from '../services/api';
 
 export default function SubjectDetailModal({ subject, semId, onClose }) {
   const [lectures, setLectures] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('ALL');
+  const [filter, setFilter] = useState('ALL'); // 'ALL' | 'P' | 'A'
+  const [sortOrder, setSortOrder] = useState('desc'); // 'desc' (newest first) | 'asc' (oldest first)
 
   useEffect(() => {
     async function loadData() {
@@ -17,10 +27,19 @@ export default function SubjectDetailModal({ subject, semId, onClose }) {
     loadData();
   }, [subject, semId]);
 
-  const filteredLectures = lectures.filter(l => {
+  // Filter lectures
+  let filteredLectures = lectures.filter(l => {
     if (filter === 'P') return l.Attendance === 'P';
     if (filter === 'A') return l.Attendance === 'A';
     return true;
+  });
+
+  // Sort lectures date-wise
+  filteredLectures = [...filteredLectures].sort((a, b) => {
+    if (sortOrder === 'desc') {
+      return (b.timestamp || 0) - (a.timestamp || 0);
+    }
+    return (a.timestamp || 0) - (b.timestamp || 0);
   });
 
   const presentCount = lectures.filter(l => l.Attendance === 'P').length;
@@ -53,19 +72,20 @@ export default function SubjectDetailModal({ subject, semId, onClose }) {
               {subject.SubName}
             </h2>
             <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-0.5">
-              Attendance & topic logs
+              Chronological Date-Wise Attendance Log
             </p>
           </div>
 
           <button
             onClick={onClose}
             className="clay-btn p-2 text-slate-500 hover:text-slate-800 shrink-0"
+            title="Close"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Filter & Metric Bar */}
+        {/* Filter & Metric Bar with Date Sort Control */}
         <div className="px-4 sm:px-6 py-3 bg-[#E8EEF5]/70 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2.5 text-xs">
           
           <div className="flex items-center gap-3 font-bold text-[11px] sm:text-xs">
@@ -80,43 +100,55 @@ export default function SubjectDetailModal({ subject, semId, onClose }) {
             </span>
           </div>
 
-          {/* Filter Pills with Horizontal Touch Scroll on Mobile */}
-          <div className="clay-inset p-0.5 sm:p-1 rounded-xl flex items-center gap-0.5 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+            {/* Filter Pills */}
+            <div className="clay-inset p-0.5 sm:p-1 rounded-xl flex items-center gap-0.5 shrink-0">
+              <button
+                onClick={() => setFilter('ALL')}
+                className={`px-2.5 sm:px-3 py-1 rounded-lg font-bold transition text-[11px] sm:text-xs shrink-0 ${
+                  filter === 'ALL'
+                    ? 'bg-indigo-600 text-white shadow-clay-primary'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                All ({lectures.length})
+              </button>
+              <button
+                onClick={() => setFilter('P')}
+                className={`px-2.5 sm:px-3 py-1 rounded-lg font-bold transition text-[11px] sm:text-xs shrink-0 ${
+                  filter === 'P'
+                    ? 'bg-emerald-600 text-white shadow-clay-success'
+                    : 'text-emerald-700 hover:text-emerald-800'
+                }`}
+              >
+                Present ({presentCount})
+              </button>
+              <button
+                onClick={() => setFilter('A')}
+                className={`px-2.5 sm:px-3 py-1 rounded-lg font-bold transition text-[11px] sm:text-xs shrink-0 ${
+                  filter === 'A'
+                    ? 'bg-rose-600 text-white shadow-clay-danger'
+                    : 'text-rose-700 hover:text-rose-800'
+                }`}
+              >
+                Absent ({absentCount})
+              </button>
+            </div>
+
+            {/* Date Sorting Order */}
             <button
-              onClick={() => setFilter('ALL')}
-              className={`px-2.5 sm:px-3 py-1 rounded-lg font-bold transition text-[11px] sm:text-xs shrink-0 ${
-                filter === 'ALL'
-                  ? 'bg-indigo-600 text-white shadow-clay-primary'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
+              onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+              className="clay-btn p-1.5 px-2.5 text-[11px] sm:text-xs font-bold text-slate-700 flex items-center gap-1 shrink-0"
+              title="Toggle Date Order"
             >
-              All ({lectures.length})
-            </button>
-            <button
-              onClick={() => setFilter('P')}
-              className={`px-2.5 sm:px-3 py-1 rounded-lg font-bold transition text-[11px] sm:text-xs shrink-0 ${
-                filter === 'P'
-                  ? 'bg-emerald-600 text-white shadow-clay-success'
-                  : 'text-emerald-700 hover:text-emerald-800'
-              }`}
-            >
-              Present ({presentCount})
-            </button>
-            <button
-              onClick={() => setFilter('A')}
-              className={`px-2.5 sm:px-3 py-1 rounded-lg font-bold transition text-[11px] sm:text-xs shrink-0 ${
-                filter === 'A'
-                  ? 'bg-rose-600 text-white shadow-clay-danger'
-                  : 'text-rose-700 hover:text-rose-800'
-              }`}
-            >
-              Absent ({absentCount})
+              <ArrowUpDown className="w-3 h-3 text-indigo-600" />
+              <span>{sortOrder === 'desc' ? 'Newest' : 'Oldest'}</span>
             </button>
           </div>
 
         </div>
 
-        {/* Body / Scrollable Lecture List */}
+        {/* Body / Scrollable Date-Wise Lecture List */}
         <div className="p-4 sm:p-6 overflow-y-auto space-y-2.5 sm:space-y-3 flex-1">
           {loading ? (
             <div className="py-16 flex flex-col items-center justify-center text-slate-400">
@@ -151,10 +183,11 @@ export default function SubjectDetailModal({ subject, semId, onClose }) {
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5 sm:gap-2">
                         <span className="text-xs font-extrabold text-slate-900 flex items-center gap-1">
-                          <Calendar className="w-3 h-3 text-slate-500 shrink-0" /> {lec.AttDate}
+                          <Calendar className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                          {lec.formattedDate || lec.AttDate}
                         </span>
                         <span className="text-[9px] sm:text-[10px] text-slate-600 clay-inset px-1.5 py-0.5 rounded font-bold shrink-0">
-                          {lec.NoOfLecture}L
+                          {lec.NoOfLecture} {lec.NoOfLecture === 1 ? 'Lecture' : 'Lectures'}
                         </span>
                       </div>
                       <p className="text-[11px] sm:text-xs text-slate-600 font-medium mt-0.5 flex items-center gap-1 truncate">
@@ -178,10 +211,13 @@ export default function SubjectDetailModal({ subject, semId, onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="p-3 sm:p-4 border-t border-slate-200/80 flex justify-end bg-[#E8EEF5]/50">
+        <div className="p-3 sm:p-4 border-t border-slate-200/80 flex items-center justify-between bg-[#E8EEF5]/50">
+          <span className="text-[11px] text-slate-500 font-bold">
+            Showing {filteredLectures.length} of {lectures.length} sessions
+          </span>
           <button
             onClick={onClose}
-            className="clay-btn w-full sm:w-auto px-5 py-2 text-xs font-bold text-slate-700 hover:text-slate-900"
+            className="clay-btn px-5 py-2 text-xs font-bold text-slate-700 hover:text-slate-900"
           >
             Close
           </button>

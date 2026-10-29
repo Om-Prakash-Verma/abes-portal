@@ -260,7 +260,39 @@ export async function fetchAttendance(semId = 'CS05', forceRefresh = false) {
   return cleaned;
 }
 
-// 3. Fetch day-by-day live lecture logs (with in-memory session cache)
+// Helper: Robust Date Parser for ERP date formats (e.g. "14 Aug 2026", "14/08/2026", "2026-08-14")
+export function parseDate(dateStr) {
+  if (!dateStr || typeof dateStr !== 'string') return new Date(0);
+  const clean = dateStr.trim();
+  const standard = new Date(clean);
+  if (!isNaN(standard.getTime())) return standard;
+
+  const parts = clean.split(/[-/]/);
+  if (parts.length === 3) {
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const year = parseInt(parts[2], 10);
+    if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+      const parsed = new Date(year, month, day);
+      if (!isNaN(parsed.getTime())) return parsed;
+    }
+  }
+  return new Date(0);
+}
+
+// Helper: Format date with weekday and readable label
+export function formatDate(dateStr) {
+  const d = parseDate(dateStr);
+  if (!d.getTime()) return dateStr;
+  return d.toLocaleDateString('en-US', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+}
+
+// 3. Fetch day-by-day live lecture logs (with in-memory session cache and date sorting)
 export async function fetchSubjectDetail(subjectId, semId = 'CS05', forceRefresh = false) {
   if (!subjectId) return [];
 
@@ -285,16 +317,87 @@ export async function fetchSubjectDetail(subjectId, semId = 'CS05', forceRefresh
       status = r.Attendance.replace(/<\/?[^>]+>/g, '').trim();
     }
 
+    const parsedDate = parseDate(r.AttDate);
+    const timestamp = parsedDate.getTime();
+
     return {
       AttDate: r.AttDate,
-      NoOfLecture: r.NoOfLecture || 1,
+      dateObj: parsedDate,
+      timestamp,
+      formattedDate: formatDate(r.AttDate),
+      NoOfLecture: Number(r.NoOfLecture) || 1,
       Attendance: status,
       Topic: r.Topic || 'Regular Lecture'
     };
   });
 
+  // Sort strictly by date descending (newest dates first)
+  lectures.sort((a, b) => b.timestamp - a.timestamp);
+
   inMemorySubjectCache.set(memoryKey, lectures);
   return lectures;
+}
+
+// 4. Fetch aggregated date-wise attendance timeline across all registered subjects
+export async function fetchAllDateWiseAttendance(semId = 'CS05', subjects = [], forceRefresh = false) {
+  const validSubjects = subjects.filter(s => s.subjectId && !s.isTotal);
+  if (validSubjects.length === 0) return [];
+
+  const cacheKey = `timeline_${semId}`;
+  if (!forceRefresh) {
+    const cached = getCachedItem(cacheKey);
+    if (cached) return cached;
+  }
+
+  const promises = validSubjects.map(async (sub) => {
+    const details = await fetchSubjectDetail(sub.subjectId, semId, forceRefresh);
+    return details.map(d => ({
+      ...d,
+      subjectId: sub.subjectId,
+      SubCollegeCode: sub.SubCollegeCode,
+      SubName: sub.SubName
+    }));
+  });
+
+  const allRecords = (await Promise.all(promises)).flat();
+
+  // Group lectures by date
+  const dateGroups = {};
+  for (const rec of allRecords) {
+    const key = rec.AttDate;
+    if (!dateGroups[key]) {
+      dateGroups[key] = {
+        date: rec.AttDate,
+        timestamp: rec.timestamp,
+        formattedDate: rec.formattedDate,
+        lectures: [],
+        totalPresent: 0,
+        totalAbsent: 0,
+        totalCount: 0
+      };
+    }
+    dateGroups[key].lectures.push(rec);
+    dateGroups[key].totalCount += rec.NoOfLecture;
+    if (rec.Attendance === 'P') {
+      dateGroups[key].totalPresent += rec.NoOfLecture;
+    } else {
+      dateGroups[key].totalAbsent += rec.NoOfLecture;
+    }
+  }
+
+  // Calculate day percentage and sort by date descending
+  const sortedDays = Object.values(dateGroups).map(day => {
+    const percentage = day.totalCount > 0
+      ? Number(((day.totalPresent / day.totalCount) * 100).toFixed(1))
+      : 0;
+    return {
+      ...day,
+      percentage
+    };
+  }).sort((a, b) => b.timestamp - a.timestamp);
+
+  setCachedItem(cacheKey, sortedDays);
+  return sortedDays;
 }
 
 // 4. Fetch live fee receipts (with 30-min local cache)
