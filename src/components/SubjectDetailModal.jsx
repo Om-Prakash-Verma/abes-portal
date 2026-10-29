@@ -27,15 +27,18 @@ export default function SubjectDetailModal({ subject, semId, onClose }) {
   const absentCount = lectures.filter(l => l.Attendance === 'A').length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
       
-      <div className="clay-card w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
+      <div className="clay-card w-full max-w-2xl max-h-[92vh] sm:max-h-[85vh] flex flex-col overflow-hidden rounded-t-3xl sm:rounded-3xl shadow-2xl">
         
+        {/* Mobile Drag Indicator */}
+        <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto mt-2.5 sm:hidden" />
+
         {/* Header */}
-        <div className="p-6 border-b border-slate-200/80 flex items-start justify-between gap-4">
+        <div className="p-4 sm:p-6 border-b border-slate-200/80 flex items-start justify-between gap-3">
           <div>
-            <div className="flex items-center gap-2.5">
-              <span className="text-xs font-mono font-bold uppercase tracking-wider text-indigo-700 clay-inset px-2.5 py-1 rounded-lg">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-indigo-700 clay-inset px-2.5 py-1 rounded-lg">
                 {subject.SubCollegeCode}
               </span>
               <span className={`text-xs font-extrabold px-3 py-1 rounded-full ${
@@ -46,42 +49,42 @@ export default function SubjectDetailModal({ subject, semId, onClose }) {
                 {subject.Percentage}%
               </span>
             </div>
-            <h2 className="text-lg font-extrabold text-slate-900 mt-2">
+            <h2 className="text-base sm:text-lg font-extrabold text-slate-900 mt-1.5 line-clamp-2">
               {subject.SubName}
             </h2>
-            <p className="text-xs text-slate-500 font-medium mt-0.5">
-              Day-by-day attendance & topic logs
+            <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-0.5">
+              Attendance & topic logs
             </p>
           </div>
 
           <button
             onClick={onClose}
-            className="clay-btn p-2 text-slate-500 hover:text-slate-800"
+            className="clay-btn p-2 text-slate-500 hover:text-slate-800 shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Filter & Metric Bar */}
-        <div className="px-6 py-3.5 bg-[#E8EEF5]/70 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="px-4 sm:px-6 py-3 bg-[#E8EEF5]/70 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-2.5 text-xs">
           
-          <div className="flex items-center gap-4 font-bold">
+          <div className="flex items-center gap-3 font-bold text-[11px] sm:text-xs">
             <span className="text-slate-600">
               Total: <strong className="text-slate-900">{lectures.length}</strong>
             </span>
             <span className="text-emerald-700">
-              Present: <strong>{presentCount}</strong>
+              P: <strong>{presentCount}</strong>
             </span>
             <span className="text-rose-700">
-              Absent: <strong>{absentCount}</strong>
+              A: <strong>{absentCount}</strong>
             </span>
           </div>
 
-          {/* Filter Pills */}
-          <div className="clay-inset p-1 rounded-xl flex items-center gap-1">
+          {/* Filter Pills with Horizontal Touch Scroll on Mobile */}
+          <div className="clay-inset p-0.5 sm:p-1 rounded-xl flex items-center gap-0.5 overflow-x-auto no-scrollbar">
             <button
               onClick={() => setFilter('ALL')}
-              className={`px-3 py-1 rounded-lg font-bold transition text-xs ${
+              className={`px-2.5 sm:px-3 py-1 rounded-lg font-bold transition text-[11px] sm:text-xs shrink-0 ${
                 filter === 'ALL'
                   ? 'bg-indigo-600 text-white shadow-clay-primary'
                   : 'text-slate-600 hover:text-slate-900'
@@ -91,7 +94,7 @@ export default function SubjectDetailModal({ subject, semId, onClose }) {
             </button>
             <button
               onClick={() => setFilter('P')}
-              className={`px-3 py-1 rounded-lg font-bold transition text-xs ${
+              className={`px-2.5 sm:px-3 py-1 rounded-lg font-bold transition text-[11px] sm:text-xs shrink-0 ${
                 filter === 'P'
                   ? 'bg-emerald-600 text-white shadow-clay-success'
                   : 'text-emerald-700 hover:text-emerald-800'
@@ -101,7 +104,7 @@ export default function SubjectDetailModal({ subject, semId, onClose }) {
             </button>
             <button
               onClick={() => setFilter('A')}
-              className={`px-3 py-1 rounded-lg font-bold transition text-xs ${
+              className={`px-2.5 sm:px-3 py-1 rounded-lg font-bold transition text-[11px] sm:text-xs shrink-0 ${
                 filter === 'A'
                   ? 'bg-rose-600 text-white shadow-clay-danger'
                   : 'text-rose-700 hover:text-rose-800'
@@ -114,7 +117,7 @@ export default function SubjectDetailModal({ subject, semId, onClose }) {
         </div>
 
         {/* Body / Scrollable Lecture List */}
-        <div className="p-6 overflow-y-auto space-y-3 flex-1">
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-2.5 sm:space-y-3 flex-1">
           {loading ? (
             <div className="py-16 flex flex-col items-center justify-center text-slate-400">
               <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
@@ -130,14 +133,14 @@ export default function SubjectDetailModal({ subject, semId, onClose }) {
               return (
                 <div
                   key={idx}
-                  className={`p-4 rounded-2xl flex items-center justify-between gap-4 transition-all ${
+                  className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl flex items-center justify-between gap-3 transition-all ${
                     isPresent
                       ? 'clay-btn border-l-4 border-l-emerald-500'
                       : 'clay-btn border-l-4 border-l-rose-500'
                   }`}
                 >
-                  <div className="flex items-start gap-3.5">
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+                  <div className="flex items-start gap-2.5 sm:gap-3.5 min-w-0">
+                    <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 ${
                       isPresent
                         ? 'bg-emerald-100 text-emerald-700 shadow-clay-success'
                         : 'bg-rose-100 text-rose-700 shadow-clay-danger'
@@ -145,23 +148,23 @@ export default function SubjectDetailModal({ subject, semId, onClose }) {
                       {isPresent ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
                     </div>
 
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5 text-slate-500" /> {lec.AttDate}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <span className="text-xs font-extrabold text-slate-900 flex items-center gap-1">
+                          <Calendar className="w-3 h-3 text-slate-500 shrink-0" /> {lec.AttDate}
                         </span>
-                        <span className="text-[10px] text-slate-600 clay-inset px-2 py-0.5 rounded font-bold">
-                          {lec.NoOfLecture} {lec.NoOfLecture > 1 ? 'Lectures' : 'Lecture'}
+                        <span className="text-[9px] sm:text-[10px] text-slate-600 clay-inset px-1.5 py-0.5 rounded font-bold shrink-0">
+                          {lec.NoOfLecture}L
                         </span>
                       </div>
-                      <p className="text-xs text-slate-600 font-medium mt-1 flex items-center gap-1.5">
-                        <BookOpen className="w-3.5 h-3.5 text-slate-400" />
-                        {lec.Topic || 'Topic not specified'}
+                      <p className="text-[11px] sm:text-xs text-slate-600 font-medium mt-0.5 flex items-center gap-1 truncate">
+                        <BookOpen className="w-3 h-3 text-slate-400 shrink-0" />
+                        <span className="truncate">{lec.Topic || 'Regular Lecture'}</span>
                       </p>
                     </div>
                   </div>
 
-                  <span className={`text-xs font-extrabold px-3 py-1 rounded-full ${
+                  <span className={`text-[11px] sm:text-xs font-extrabold px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full shrink-0 ${
                     isPresent
                       ? 'bg-emerald-100 text-emerald-800 shadow-clay-success'
                       : 'bg-rose-100 text-rose-800 shadow-clay-danger'
@@ -175,10 +178,10 @@ export default function SubjectDetailModal({ subject, semId, onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-200/80 flex justify-end bg-[#E8EEF5]/50">
+        <div className="p-3 sm:p-4 border-t border-slate-200/80 flex justify-end bg-[#E8EEF5]/50">
           <button
             onClick={onClose}
-            className="clay-btn px-5 py-2 text-xs font-bold text-slate-700 hover:text-slate-900"
+            className="clay-btn w-full sm:w-auto px-5 py-2 text-xs font-bold text-slate-700 hover:text-slate-900"
           >
             Close
           </button>

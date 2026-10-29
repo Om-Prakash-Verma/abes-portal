@@ -86,27 +86,27 @@ export default function LoginPage({ onLoginSuccess }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#EEF3F8] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#EEF3F8] flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
       
       {/* Brand Header */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="mx-auto w-16 h-16 rounded-3xl bg-indigo-600 flex items-center justify-center text-white shadow-clay-primary">
-          <GraduationCap className="w-9 h-9" />
+        <div className="mx-auto w-14 h-14 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl bg-indigo-600 flex items-center justify-center text-white shadow-clay-primary">
+          <GraduationCap className="w-8 h-8 sm:w-9 sm:h-9" />
         </div>
-        <h2 className="mt-5 text-3xl font-extrabold text-slate-900 tracking-tight">
+        <h2 className="mt-4 sm:mt-5 text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
           ABES Portal
         </h2>
-        <p className="mt-1 text-sm text-slate-500 font-medium">
+        <p className="mt-1 text-xs sm:text-sm text-slate-500 font-medium px-2">
           Direct authentication with your official college credentials
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4">
-        <div className="clay-card py-8 px-6 sm:px-9">
+      <div className="mt-6 sm:mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="clay-card py-6 sm:py-8 px-5 sm:px-9">
           
           {/* Error Message Alert */}
           {error && (
-            <div className="mb-5 p-3.5 rounded-2xl bg-rose-100 text-rose-800 shadow-clay-danger flex items-start gap-2.5 text-xs font-bold">
+            <div className="mb-4 sm:mb-5 p-3 sm:p-3.5 rounded-2xl bg-rose-100 text-rose-800 shadow-clay-danger flex items-start gap-2.5 text-xs font-bold">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
               <span>{error}</span>
             </div>
@@ -114,7 +114,7 @@ export default function LoginPage({ onLoginSuccess }) {
 
           {/* Success Message Alert */}
           {successMsg && step === 2 && (
-            <div className="mb-5 p-3.5 rounded-2xl bg-emerald-100 text-emerald-800 shadow-clay-success flex items-start gap-2.5 text-xs font-bold">
+            <div className="mb-4 sm:mb-5 p-3 sm:p-3.5 rounded-2xl bg-emerald-100 text-emerald-800 shadow-clay-success flex items-start gap-2.5 text-xs font-bold">
               <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600" />
               <span>{successMsg}</span>
             </div>
@@ -122,23 +122,25 @@ export default function LoginPage({ onLoginSuccess }) {
 
           {/* ================= STEP 1: CREDENTIALS ================= */}
           {step === 1 && (
-            <form onSubmit={handleRequestOtp} className="space-y-4">
+            <form onSubmit={handleRequestOtp} className="space-y-3.5 sm:space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                <label className="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
                   ERP User ID / Admission No.
                 </label>
                 <input
                   type="text"
                   required
+                  autoCapitalize="none"
+                  autoCorrect="off"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="e.g. 2024b0101207"
-                  className="w-full px-4 py-3 text-xs font-bold rounded-xl clay-inset text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
+                  className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-bold rounded-xl clay-inset text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                <label className="block text-[11px] sm:text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
                   ERP Password
                 </label>
                 <div className="relative">
@@ -148,12 +150,12 @@ export default function LoginPage({ onLoginSuccess }) {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your ERP password"
-                    className="w-full px-4 py-3 pr-11 text-xs font-bold rounded-xl clay-inset text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
+                    className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 pr-10 text-xs sm:text-sm font-bold rounded-xl clay-inset text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -163,7 +165,7 @@ export default function LoginPage({ onLoginSuccess }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-extrabold text-xs text-white bg-indigo-600 hover:bg-indigo-700 shadow-clay-primary active:scale-[0.98] transition mt-2 disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-extrabold text-xs sm:text-sm text-white bg-indigo-600 hover:bg-indigo-700 shadow-clay-primary active:scale-[0.98] transition mt-2 disabled:opacity-50"
               >
                 {loading ? (
                   <>
@@ -182,10 +184,10 @@ export default function LoginPage({ onLoginSuccess }) {
 
           {/* ================= STEP 2: VERIFY OTP ================= */}
           {step === 2 && (
-            <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <form onSubmit={handleVerifyOtp} className="space-y-3.5 sm:space-y-4">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider">
+                  <label className="block text-[11px] sm:text-xs font-extrabold text-slate-700 uppercase tracking-wider">
                     6-Digit Verification OTP
                   </label>
                   <span className="text-xs font-mono text-indigo-700 font-extrabold">
@@ -197,11 +199,13 @@ export default function LoginPage({ onLoginSuccess }) {
                   type="text"
                   required
                   autoFocus
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   maxLength={8}
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                   placeholder="Enter OTP (e.g. 942047)"
-                  className="w-full px-4 py-3.5 text-center tracking-widest text-xl font-mono font-extrabold rounded-2xl clay-inset text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                  className="w-full px-4 py-3 sm:py-3.5 text-center tracking-widest text-xl sm:text-2xl font-mono font-extrabold rounded-2xl clay-inset text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
                 />
                 <p className="text-[11px] font-medium text-slate-500 mt-2 text-center">
                   Please check the SMS on your registered phone or college email.
@@ -211,7 +215,7 @@ export default function LoginPage({ onLoginSuccess }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-extrabold text-xs text-white bg-indigo-600 hover:bg-indigo-700 shadow-clay-primary active:scale-[0.98] transition disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-extrabold text-xs sm:text-sm text-white bg-indigo-600 hover:bg-indigo-700 shadow-clay-primary active:scale-[0.98] transition disabled:opacity-50"
               >
                 {loading ? (
                   <>
@@ -275,7 +279,7 @@ export default function LoginPage({ onLoginSuccess }) {
               </form>
             )}
 
-            <p className="mt-4 text-[11px] text-slate-400 font-semibold flex items-center justify-center gap-1.5">
+            <p className="mt-4 text-[10px] sm:text-[11px] text-slate-400 font-semibold flex items-center justify-center gap-1.5">
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
               Direct connection • Your credentials never leave your browser
             </p>
