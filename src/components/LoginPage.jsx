@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { GraduationCap, ShieldCheck, Key, ArrowRight, ArrowLeft, AlertCircle, Loader2, Eye, EyeOff, Smartphone, Mail, CheckCircle2, Sun, Moon } from 'lucide-react';
 import { sendLoginOtp, verifyLoginOtp, setStoredCookie } from '../services/api';
 import LoginMascot from './LoginMascot';
