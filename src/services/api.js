@@ -84,7 +84,6 @@ async function fetchErp(endpoint, method = 'POST', payload = null) {
   });
 
   if (res.status === 401 || res.status === 403) {
-    clearSession();
     throw new Error('SESSION_EXPIRED');
   }
 
@@ -92,21 +91,9 @@ async function fetchErp(endpoint, method = 'POST', payload = null) {
     throw new Error(`ERP returned HTTP ${res.status}`);
   }
 
-  // Handle HTML responses (like pages)
-  const contentType = res.headers.get('content-type') || '';
-  if (contentType.includes('text/html')) {
-    const html = await res.text();
-    if (html.includes('Login.aspx')) {
-      clearSession();
-      throw new Error('SESSION_EXPIRED');
-    }
-    return html;
-  }
-
   const json = await res.json();
 
   if (typeof json === 'string' && json.includes('Login.aspx')) {
-    clearSession();
     throw new Error('SESSION_EXPIRED');
   }
 
@@ -117,34 +104,57 @@ async function fetchErp(endpoint, method = 'POST', payload = null) {
   return data;
 }
 
-// 1. Fetch available semesters dynamically for the logged-in student
-export async function fetchAvailableSemesters() {
-  try {
-    const html = await fetchErp('ERP/Dashboard/Student/Attendance/Default.aspx', 'GET');
-    if (typeof html === 'string') {
-      const selectMatch = html.match(/<select[^>]*ddlsem[^>]*>(.*?)<\/select>/si);
-      if (selectMatch) {
-        const options = [];
-        const optRegex = /<option[^>]*value=['"]([^'"]*)['"][^>]*>(.*?)<\/option>/gi;
-        let match;
-        while ((match = optRegex.exec(selectMatch[1])) !== null) {
-          if (match[1]) {
-            options.push({
-              id: match[1].trim(),
-              name: match[2].replace(/<\/?[^>]+>/g, '').trim()
-            });
-          }
-        }
-        if (options.length > 0) return options;
-      }
-    }
-  } catch (err) {
-    console.warn('Could not extract dynamic semesters from HTML, falling back:', err.message);
-  }
-  return [{ id: 'CS05', name: 'Sem V' }];
+// Helper: Derive semid dynamically from student profile
+export function deriveSemId(profile) {
+  if (!profile) return 'CS05';
+
+  const semStr = (profile.Samester_Name || '').toLowerCase();
+  let num = '05';
+  if (semStr.includes('viii') || semStr.includes('8')) num = '08';
+  else if (semStr.includes('vii') || semStr.includes('7')) num = '07';
+  else if (semStr.includes('vi') || semStr.includes('6')) num = '06';
+  else if (semStr.includes('v') || semStr.includes('5')) num = '05';
+  else if (semStr.includes('iv') || semStr.includes('4')) num = '04';
+  else if (semStr.includes('iii') || semStr.includes('3')) num = '03';
+  else if (semStr.includes('ii') || semStr.includes('2')) num = '02';
+  else if (semStr.includes('i') || semStr.includes('1')) num = '01';
+
+  const branchStr = (profile.Branch_Name || '').toUpperCase();
+  let branch = 'CS';
+  if (branchStr.includes('IT') || branchStr.includes('INFORMATION')) branch = 'IT';
+  else if (branchStr.includes('AIML')) branch = 'AIML';
+  else if (branchStr.includes('DS') || branchStr.includes('DATA')) branch = 'DS';
+  else if (branchStr.includes('EC') || branchStr.includes('ELECTRONIC')) branch = 'EC';
+  else if (branchStr.includes('ME') || branchStr.includes('MECHANIC')) branch = 'ME';
+  else if (branchStr.includes('EN') || branchStr.includes('ELECTRICAL')) branch = 'EN';
+  else if (branchStr.includes('CE') || branchStr.includes('CIVIL')) branch = 'CE';
+
+  return `${branch}${num}`;
 }
 
-// 2. Fetch live student profile
+// Generate semester options based on student branch and active semester
+export function getAvailableSemesters(profile) {
+  const currentSem = deriveSemId(profile);
+  const branch = currentSem.replace(/[0-9]/g, '');
+
+  const semNumbers = [
+    { num: '01', name: 'Sem I' },
+    { num: '02', name: 'Sem II' },
+    { num: '03', name: 'Sem III' },
+    { num: '04', name: 'Sem IV' },
+    { num: '05', name: 'Sem V' },
+    { num: '06', name: 'Sem VI' },
+    { num: '07', name: 'Sem VII' },
+    { num: '08', name: 'Sem VIII' }
+  ];
+
+  return semNumbers.map(s => ({
+    id: `${branch}${s.num}`,
+    name: s.name
+  }));
+}
+
+// 1. Fetch live student profile
 export async function fetchProfile() {
   const raw = await fetchErp('ERP/Dashboard/Student/MyProfile/Default.aspx/getStudentProfile', 'POST', {
     StudentDash: { mode: 'StudentProfile' }
@@ -156,13 +166,8 @@ export async function fetchProfile() {
   throw new Error('Could not retrieve student profile from ERP');
 }
 
-// 3. Fetch live student attendance dynamically for any student / semester
-export async function fetchAttendance(semId) {
-  if (!semId) {
-    const sems = await fetchAvailableSemesters();
-    semId = sems[0]?.id || 'CS05';
-  }
-
+// 2. Fetch live student attendance dynamically for any student / semester
+export async function fetchAttendance(semId = 'CS05') {
   const raw = await fetchErp('ERP/Dashboard/Student/Attendance/Default.aspx/getStudentAtt', 'POST', {
     StudentDashBAL: { semid: semId, mode: 'MyAttendance' }
   });
@@ -180,7 +185,7 @@ export async function fetchAttendance(semId) {
 
     const isTotal = item.SubName && item.SubName.toLowerCase().includes('total');
     const cleanSubName = item.SubName
-      ? item.SubName.replace(/<\/?[^>]+(>|$)/g, '').replace(':-', '').trim()
+      ? item.SubName.replace(/<\/?[^>]+>/g, '').replace(':-', '').trim()
       : '';
 
     return {
@@ -195,12 +200,12 @@ export async function fetchAttendance(semId) {
   });
 }
 
-// 4. Fetch day-by-day live lecture logs for a subject
-export async function fetchSubjectDetail(subjectId, semId) {
+// 3. Fetch day-by-day live lecture logs for a subject
+export async function fetchSubjectDetail(subjectId, semId = 'CS05') {
   if (!subjectId) return [];
 
   const raw = await fetchErp('ERP/Dashboard/Student/Attendance/Default.aspx/getSubjectAtt', 'POST', {
-    StudentDashBAL: { semid: semId || 'CS05', subjectid: subjectId, mode: 'MySubjectAttendance' }
+    StudentDashBAL: { semid: semId, subjectid: subjectId, mode: 'MySubjectAttendance' }
   });
 
   if (!Array.isArray(raw)) return [];
@@ -212,7 +217,7 @@ export async function fetchSubjectDetail(subjectId, semId) {
     } else if (r.Attendance && r.Attendance.includes('>A<')) {
       status = 'A';
     } else if (typeof r.Attendance === 'string') {
-      status = r.Attendance.replace(/<\/?[^>]+(>|$)/g, '').trim();
+      status = r.Attendance.replace(/<\/?[^>]+>/g, '').trim();
     }
 
     return {
@@ -224,7 +229,7 @@ export async function fetchSubjectDetail(subjectId, semId) {
   });
 }
 
-// 5. Fetch live fee receipts
+// 4. Fetch live fee receipts
 export async function fetchFeeHistory() {
   const raw = await fetchErp('ERP/Dashboard/Student/Fina_StuDetail/RcptHistory.aspx/get_StuFeeHistory', 'POST', {
     objStudFee: { fromdate: '', todate: '' }

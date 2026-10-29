@@ -7,7 +7,7 @@ import SubjectDetailModal from './components/SubjectDetailModal';
 import ProfileModal from './components/ProfileModal';
 import FeeReceiptsModal from './components/FeeReceiptsModal';
 import LoginPage from './components/LoginPage';
-import { fetchProfile, fetchAttendance, fetchAvailableSemesters, hasValidSession, clearSession } from './services/api';
+import { fetchProfile, fetchAttendance, deriveSemId, getAvailableSemesters, hasValidSession, clearSession } from './services/api';
 import { Search, BookOpen, AlertTriangle, CheckCircle2, ArrowUpDown, Loader2, LayoutGrid, List, Layers } from 'lucide-react';
 
 export default function App() {
@@ -38,18 +38,19 @@ export default function App() {
     setError('');
     setLoading(true);
     try {
-      // 1. Fetch semesters and profile first
-      const [profData, semsData] = await Promise.all([
-        fetchProfile(),
-        fetchAvailableSemesters()
-      ]);
+      // 1. Fetch profile first
+      const profData = await fetchProfile();
       setProfile(profData);
-      setAvailableSemesters(semsData);
 
-      const semToLoad = targetSemId || activeSemId || semsData[0]?.id || 'CS05';
+      // 2. Derive dynamic semester and available options
+      const semsList = getAvailableSemesters(profData);
+      setAvailableSemesters(semsList);
+
+      const derivedCurrent = deriveSemId(profData);
+      const semToLoad = targetSemId || activeSemId || derivedCurrent;
       setActiveSemId(semToLoad);
 
-      // 2. Fetch live attendance for this specific student & semester
+      // 3. Fetch live attendance for this student & semester
       const attData = await fetchAttendance(semToLoad);
       setAttendance(attData);
       setIsAuthenticated(true);
@@ -58,7 +59,7 @@ export default function App() {
       if (e.message === 'SESSION_EXPIRED' || e.message === 'NO_SESSION') {
         clearSession();
         setIsAuthenticated(false);
-        setError('Your ERP session has expired or is invalid. Please reconnect.');
+        setError('Your ERP session has expired or is invalid. Please log in again.');
       } else {
         setError(`ERP Error: ${e.message}`);
       }
