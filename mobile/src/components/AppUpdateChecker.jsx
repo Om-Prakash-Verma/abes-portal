@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Rocket, Download, X, Sparkles, AlertCircle, ExternalLink } from 'lucide-react';
 
-export const CURRENT_APP_VERSION = '1.0.0';
+export const CURRENT_APP_VERSION = '1.0.1';
 const GITHUB_REPO = 'Om-Prakash-Verma/abes-portal';
 
 function isVersionHigher(remote, current) {
