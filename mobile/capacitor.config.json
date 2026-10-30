@@ -1,0 +1,14 @@
+{
+  "appId": "com.abes.portal",
+  "appName": "ABES Portal",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}

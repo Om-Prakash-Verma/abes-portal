@@ -28,3 +28,14 @@ yarn-error.log*
 Thumbs.db
 .vscode/
 .idea/
+
+# Android / Mobile build files
+.gradle/
+*.iml
+mobile/android/.gradle/
+mobile/android/app/build/
+mobile/android/build/
+mobile/android/captures/
+mobile/android/.idea/
+mobile/android/*.iml
+local.properties
