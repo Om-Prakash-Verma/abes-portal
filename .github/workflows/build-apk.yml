@@ -50,15 +50,15 @@ jobs:
           cd mobile/android
           chmod +x gradlew
 
-      - name: Build Android Release APK
+      - name: Build Android APK
         run: |
           cd mobile/android
-          ./gradlew assembleRelease || ./gradlew assembleDebug
+          ./gradlew assembleDebug
 
       - name: Locate and Rename APK
         run: |
           mkdir -p mobile-builds
-          APK_PATH=$(find mobile/android/app/build/outputs/apk -name "*.apk" | head -n 1)
+          APK_PATH=$(find mobile/android/app/build/outputs/apk/debug -name "*.apk" | head -n 1)
           echo "Found APK at: $APK_PATH"
           cp "$APK_PATH" mobile-builds/abes-portal.apk
 
