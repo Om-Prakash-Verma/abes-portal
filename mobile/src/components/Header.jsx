@@ -139,7 +139,7 @@ export default function Header({
               title="Check for App Updates"
             >
               <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>v1.0.2</span>
+              <span>v1.0.3</span>
             </button>
 
             {/* Dark / Light Mode Toggle */}
@@ -288,7 +288,7 @@ export default function Header({
                       <div className="flex items-center justify-between">
                         <span>Check for Updates</span>
                         <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
-                          v1.0.2
+                          v1.0.3
                         </span>
                       </div>
                       <div className="text-[10px] text-slate-400 font-normal">Check latest APK release</div>

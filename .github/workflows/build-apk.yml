@@ -77,15 +77,17 @@ jobs:
           body: |
             ## 📱 ABES Portal Android Release (${{ github.ref_name }})
             
-            ### What's New
-            - Direct connection to ABES ERP with 0 Cloudflare Worker latency
-            - 1-Tap Fast Login with saved credentials
-            - Real-time attendance percentage & bunk calculator
-            - Date-wise lecture timeline & fee receipts
+            ### 🚀 What's New in ${{ github.ref_name }}:
+            - **Persistent Signature Keystore**: Resolved package conflict errors so updates install seamlessly over existing installations.
+            - **Status Bar & Notch Safe Area Fix**: Navigation bar now sits cleanly below physical punch-hole cameras, clocks, and battery icons.
+            - **In-App Auto-Updater**: Manual and background update triggers inside Profile & Header menus with changelog viewer.
+            - **Zero Worker Overhead**: 100% direct native device-to-ERP communication via `CapacitorCookies` with 0 Cloudflare Worker usage.
+            - **Google Analytics 4**: Accurate real-time traffic telemetry with anonymous device metrics.
+            - **OLED Dark Mode Optimization**: Pitch-black `#000000` battery saver design with high-contrast claymorphic cards.
             
-            ### Installation
-            1. Download `abes-portal.apk` below.
-            2. Open the downloaded file on your Android device.
-            3. Allow "Install from unknown sources" if prompted.
+            ### 📥 Installation Instructions:
+            1. Download **`abes-portal.apk`** from Assets below.
+            2. *Important Note for Previous Testers*: If you installed an earlier preview build, **uninstall the previous test version once** (due to the new permanent release signature key).
+            3. Tap **Install** and open. All future updates will install seamlessly with 1-tap in-place updates!
           draft: false
           prerelease: false

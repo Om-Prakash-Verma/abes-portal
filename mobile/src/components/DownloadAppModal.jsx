@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { trackApkDownloadClick } from '../utils/analytics';
 
+export const LATEST_APK_VERSION = '1.0.3';
 const GITHUB_RELEASES_URL = 'https://github.com/Om-Prakash-Verma/abes-portal/releases/latest';
 const DIRECT_APK_DOWNLOAD_URL = 'https://github.com/Om-Prakash-Verma/abes-portal/releases/latest/download/abes-portal.apk';
 
@@ -42,11 +43,11 @@ export default function DownloadAppModal({ isOpen, onClose }) {
                   ABES Portal Android App
                 </h3>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300/40">
-                  v1.0.0 APK
+                  v{LATEST_APK_VERSION} Latest
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                Faster performance, direct ERP connection & native notifications
+                Faster performance, direct ERP connection & 0 Cloudflare Worker usage
               </p>
             </div>
           </div>
@@ -66,9 +67,9 @@ export default function DownloadAppModal({ isOpen, onClose }) {
             <div className="clay-card p-3 flex items-start gap-2.5 bg-white/70 dark:bg-black/40">
               <Zap className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
               <div>
-                <p className="font-extrabold text-slate-800 dark:text-slate-200">Zero Server Delay</p>
+                <p className="font-extrabold text-slate-800 dark:text-slate-200">Zero Worker Overhead</p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  Direct connection to college ERP without intermediary proxy.
+                  Connects 100% directly from your device to the college server.
                 </p>
               </div>
             </div>
@@ -78,7 +79,7 @@ export default function DownloadAppModal({ isOpen, onClose }) {
               <div>
                 <p className="font-extrabold text-slate-800 dark:text-slate-200">1-Tap Fast Login</p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  Secure local credential remembering. Just enter OTP!
+                  Remember credentials securely to bypass password retyping.
                 </p>
               </div>
             </div>
@@ -86,9 +87,9 @@ export default function DownloadAppModal({ isOpen, onClose }) {
             <div className="clay-card p-3 flex items-start gap-2.5 bg-white/70 dark:bg-black/40">
               <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
               <div>
-                <p className="font-extrabold text-slate-800 dark:text-slate-200">Open Source & Safe</p>
+                <p className="font-extrabold text-slate-800 dark:text-slate-200">Official Signing Key</p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  Built transparently on GitHub. Zero tracking of passwords.
+                  Signed with permanent keystore for seamless 1-tap updates.
                 </p>
               </div>
             </div>
@@ -96,9 +97,9 @@ export default function DownloadAppModal({ isOpen, onClose }) {
             <div className="clay-card p-3 flex items-start gap-2.5 bg-white/70 dark:bg-black/40">
               <Bell className="w-4 h-4 text-violet-500 shrink-0 mt-0.5" />
               <div>
-                <p className="font-extrabold text-slate-800 dark:text-slate-200">Auto Update Checks</p>
+                <p className="font-extrabold text-slate-800 dark:text-slate-200">In-App Updates</p>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  Detects and downloads new releases right inside the app.
+                  Checks and downloads latest APK releases directly inside the app.
                 </p>
               </div>
             </div>
@@ -110,10 +111,10 @@ export default function DownloadAppModal({ isOpen, onClose }) {
               <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
               Installation Guide for Android:
             </p>
-            <ol className="list-decimal list-inside space-y-0.5 text-indigo-800/90 dark:text-indigo-300">
-              <li>Tap <strong>Download APK</strong> below to grab the file.</li>
+            <ol className="list-decimal list-inside space-y-1 text-indigo-800/90 dark:text-indigo-300">
+              <li>Tap <strong>Download Android APK v{LATEST_APK_VERSION}</strong> below.</li>
               <li>Open the downloaded <code className="font-mono">abes-portal.apk</code> from notifications.</li>
-              <li>Allow "Install unknown apps" if prompted by your browser.</li>
+              <li>If you had an earlier preview installed, uninstall it first to apply the permanent official certificate.</li>
             </ol>
           </div>
 
@@ -124,7 +125,7 @@ export default function DownloadAppModal({ isOpen, onClose }) {
               className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-extrabold text-xs sm:text-sm text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-clay-primary active:scale-[0.98] transition"
             >
               <Download className="w-4 h-4" />
-              <span>Download Android APK (Direct)</span>
+              <span>Download Android APK v{LATEST_APK_VERSION}</span>
             </button>
 
             <a
@@ -133,7 +134,7 @@ export default function DownloadAppModal({ isOpen, onClose }) {
               rel="noopener noreferrer"
               className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 text-center transition"
             >
-              <span>View GitHub Releases & Changelog</span>
+              <span>View GitHub Releases & What's New</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>

@@ -3,12 +3,20 @@ apply plugin: 'com.android.application'
 android {
     namespace "com.abes.portal"
     compileSdk rootProject.ext.compileSdkVersion
+    signingConfigs {
+        release {
+            storeFile file('release.keystore')
+            storePassword 'abesportal123'
+            keyAlias 'abesportal'
+            keyPassword 'abesportal123'
+        }
+    }
     defaultConfig {
         applicationId "com.abes.portal"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 3
+        versionName "1.0.3"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -17,7 +25,11 @@ android {
         }
     }
     buildTypes {
+        debug {
+            signingConfig signingConfigs.release
+        }
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
