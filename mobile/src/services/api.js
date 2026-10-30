@@ -154,134 +154,37 @@ function parseSetCookies(headers, existingCookie = '') {
   return Array.from(map.entries()).map(([k, v]) => `${k}=${v}`).join('; ');
 }
 
-// Send OTP directly to college server from mobile
+const AUTH_API_BASE = 'https://abes-portal.pages.dev';
+
+// Send OTP to student official college email
 export async function sendLoginOtp(username, password) {
   const cleanUser = username.trim();
-
-  // If in native Android environment, use CapacitorHttp directly
-  if (Capacitor.isNativePlatform()) {
-    // 1. Acquire initial Login page
-    const getRes = await CapacitorHttp.get({
-      url: `${ERP_BASE_URL}/Login.aspx`,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36'
-      }
-    });
-
-    const html = typeof getRes.data === 'string' ? getRes.data : '';
-    const vsMatch = html.match(/id="__VIEWSTATE" value="([^"]+)"/);
-    const genMatch = html.match(/id="__VIEWSTATEGENERATOR" value="([^"]+)"/);
-    const initialCookies = parseSetCookies(getRes.headers);
-
-    if (!vsMatch) {
-      throw new Error('Could not establish connection to ABES ERP server.');
-    }
-
-    // 2. Submit credentials to trigger OTP
-    const params = new URLSearchParams();
-    params.append('__EVENTTARGET', '');
-    params.append('__EVENTARGUMENT', '');
-    params.append('__VIEWSTATE', vsMatch[1]);
-    params.append('__VIEWSTATEGENERATOR', genMatch ? genMatch[1] : 'C2EE9ABB');
-    params.append('txtuser', cleanUser);
-    params.append('txtPassword', password);
-    params.append('txtOTP', '');
-    params.append('g-recaptcha-response', '');
-    params.append('btnOTP', 'Get OTP');
-
-    const postRes = await CapacitorHttp.post({
-      url: `${ERP_BASE_URL}/Login.aspx`,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Cookie': initialCookies,
-        'Referer': `${ERP_BASE_URL}/Login.aspx`
-      },
-      data: params.toString()
-    });
-
-    const postHtml = typeof postRes.data === 'string' ? postRes.data : '';
-    const postCookies = parseSetCookies(postRes.headers, initialCookies);
-    const newVsMatch = postHtml.match(/id="__VIEWSTATE" value="([^"]+)"/);
-
-    const isOtpSent = postHtml.includes('OTP has been Sent') || postHtml.includes('Sent on your Mobile');
-    if (isOtpSent) {
-      return {
-        success: true,
-        message: 'OTP has been sent to your official college email ID.',
-        viewState: newVsMatch ? newVsMatch[1] : vsMatch[1],
-        sessionCookie: postCookies
-      };
-    }
-
-    let errorMsg = 'Incorrect Password. Please check your credentials and try again.';
-    const alertMatch = postHtml.match(/<div class=['"]alert[^>]*>(.*?)<\/div>/si);
-    if (alertMatch) {
-      const cleanAlert = alertMatch[1].replace(/<[^>]+>/g, '').trim();
-      if (cleanAlert && cleanAlert.length > 2) errorMsg = cleanAlert;
-    }
-    throw new Error(errorMsg);
-  }
-
-  // Fallback if tested on web preview
-  const res = await fetch('/api/auth?action=send-otp', {
+  const res = await fetch(`${AUTH_API_BASE}/api/auth?action=send-otp`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username: cleanUser, password })
   });
+
   const data = await res.json();
-  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to trigger OTP.');
+  if (!res.ok || !data.success) {
+    throw new Error(data.error || 'Failed to trigger OTP.');
+  }
   return data;
 }
 
-// Verify OTP directly on college server
+// Verify OTP and store authenticated session cookie
 export async function verifyLoginOtp({ username, password, otp, viewState, sessionCookie }) {
-  if (Capacitor.isNativePlatform()) {
-    const params = new URLSearchParams();
-    params.append('__EVENTTARGET', '');
-    params.append('__EVENTARGUMENT', '');
-    params.append('__VIEWSTATE', viewState || '');
-    params.append('__VIEWSTATEGENERATOR', 'C2EE9ABB');
-    params.append('txtuser', username.trim());
-    params.append('txtPassword', password);
-    params.append('txtOTP', otp.trim());
-    params.append('g-recaptcha-response', '');
-    params.append('btnLogin', 'Verify OTP');
-
-    const verifyRes = await CapacitorHttp.post({
-      url: `${ERP_BASE_URL}/Login.aspx`,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Cookie': sessionCookie || '',
-        'Referer': `${ERP_BASE_URL}/Login.aspx`
-      },
-      data: params.toString()
-    });
-
-    const finalCookies = parseSetCookies(verifyRes.headers, sessionCookie);
-    const location = verifyRes.headers['location'] || verifyRes.headers['Location'] || '';
-    const bodyStr = typeof verifyRes.data === 'string' ? verifyRes.data : '';
-
-    if (verifyRes.status === 302 || location.includes('Home/Student/Default.aspx') || bodyStr.includes('Home/Student/Default.aspx')) {
-      setStoredCookie(finalCookies || sessionCookie);
-      clearAllCaches();
-      return { success: true, cookies: finalCookies || sessionCookie };
-    }
-
-    const alertMatch = bodyStr.match(/<div class=['"]alert[^>]*>(.*?)<\/div>/si);
-    const errorMsg = alertMatch
-      ? alertMatch[1].replace(/<[^>]+>/g, '').trim()
-      : 'Invalid OTP. Please check the OTP sent to your college email.';
-    throw new Error(errorMsg);
-  }
-
-  // Fallback if tested on web preview
-  const res = await fetch('/api/auth?action=verify-otp', {
+  const res = await fetch(`${AUTH_API_BASE}/api/auth?action=verify-otp`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password, otp, viewState, sessionCookie })
+    body: JSON.stringify({ username: username.trim(), password, otp: otp.trim(), viewState, sessionCookie })
   });
+
   const data = await res.json();
-  if (!res.ok || !data.success) throw new Error(data.error || 'Failed to verify OTP.');
+  if (!res.ok || !data.success) {
+    throw new Error(data.error || 'Failed to verify OTP.');
+  }
+
   if (data.cookies) {
     setStoredCookie(data.cookies);
     clearAllCaches();
