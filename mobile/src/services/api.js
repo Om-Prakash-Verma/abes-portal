@@ -1,4 +1,4 @@
-import { Capacitor, CapacitorHttp } from '@capacitor/core';
+import { Capacitor, CapacitorHttp, CapacitorCookies } from '@capacitor/core';
 
 const ERP_BASE_URL = 'https://erp.abes.ac.in';
 const STORAGE_KEY = 'abes_erp_session_cookie';
@@ -83,6 +83,9 @@ export function hasValidSession() {
 export function clearSession() {
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(SESSION_START_KEY);
+  try {
+    CapacitorCookies.clearAllCookies();
+  } catch (e) {}
   clearAllCaches();
 }
 
@@ -123,128 +126,166 @@ export function clearAllCaches() {
   } catch (e) {}
 }
 
-// -------------------------------------------------------------
-// Native Direct HTTP Client (Bypasses Cloudflare Workers & CORS)
-// -------------------------------------------------------------
-
-function parseSetCookies(headers, existingCookie = '') {
-  const map = new Map();
-  if (existingCookie) {
-    existingCookie.split(';').forEach(c => {
-      const parts = c.trim().split('=');
-      if (parts[0] && parts.length > 1) {
-        map.set(parts[0].trim(), parts.slice(1).join('='));
-      }
-    });
-  }
-
-  // Check headers for set-cookie
-  const setCookie = headers['set-cookie'] || headers['Set-Cookie'];
-  if (setCookie) {
-    const headerArr = Array.isArray(setCookie) ? setCookie : [setCookie];
-    headerArr.forEach(h => {
-      const cookiePart = h.split(';')[0];
-      const parts = cookiePart.trim().split('=');
-      if (parts[0] && parts.length > 1) {
-        map.set(parts[0].trim(), parts.slice(1).join('='));
-      }
-    });
-  }
-
-  return Array.from(map.entries()).map(([k, v]) => `${k}=${v}`).join('; ');
+// Helper: Read all cookies from native Android cookie manager
+async function getNativeCookiesString() {
+  try {
+    const cookieObj = await CapacitorCookies.getCookies({ url: ERP_BASE_URL });
+    if (cookieObj && typeof cookieObj === 'object') {
+      const parts = Object.entries(cookieObj).map(([k, v]) => `${k}=${v}`);
+      if (parts.length > 0) return parts.join('; ');
+    }
+  } catch (e) {}
+  return getStoredCookie();
 }
 
-const AUTH_API_BASE = 'https://abes-portal.pages.dev';
+// -------------------------------------------------------------
+// 100% PURE NATIVE DIRECT AUTHENTICATION (0 CLOUDFLARE WORKER USAGE)
+// -------------------------------------------------------------
 
-// Send OTP to student official college email
+// STEP 1: Direct native request to trigger OTP to student email
 export async function sendLoginOtp(username, password) {
   const cleanUser = username.trim();
-  const res = await fetch(`${AUTH_API_BASE}/api/auth?action=send-otp`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: cleanUser, password })
+
+  // 1. Acquire initial Login page to read __VIEWSTATE
+  const getRes = await CapacitorHttp.get({
+    url: `${ERP_BASE_URL}/Login.aspx`,
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36'
+    }
   });
 
-  const data = await res.json();
-  if (!res.ok || !data.success) {
-    throw new Error(data.error || 'Failed to trigger OTP.');
+  const html = typeof getRes.data === 'string' ? getRes.data : '';
+  const vsMatch = html.match(/id="__VIEWSTATE" value="([^"]+)"/);
+  const genMatch = html.match(/id="__VIEWSTATEGENERATOR" value="([^"]+)"/);
+
+  if (!vsMatch) {
+    throw new Error('Could not establish direct connection to ABES ERP server.');
   }
-  return data;
+
+  // 2. Submit credentials to trigger OTP directly
+  const params = new URLSearchParams();
+  params.append('__EVENTTARGET', '');
+  params.append('__EVENTARGUMENT', '');
+  params.append('__VIEWSTATE', vsMatch[1]);
+  params.append('__VIEWSTATEGENERATOR', genMatch ? genMatch[1] : 'C2EE9ABB');
+  params.append('txtuser', cleanUser);
+  params.append('txtPassword', password);
+  params.append('txtOTP', '');
+  params.append('g-recaptcha-response', '');
+  params.append('btnOTP', 'Get OTP');
+
+  const postRes = await CapacitorHttp.post({
+    url: `${ERP_BASE_URL}/Login.aspx`,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Referer': `${ERP_BASE_URL}/Login.aspx`
+    },
+    data: params.toString()
+  });
+
+  const postHtml = typeof postRes.data === 'string' ? postRes.data : '';
+  const newVsMatch = postHtml.match(/id="__VIEWSTATE" value="([^"]+)"/);
+  const isOtpSent = postHtml.includes('OTP has been Sent') || postHtml.includes('Sent on your Mobile');
+
+  if (isOtpSent) {
+    const cookiesStr = await getNativeCookiesString();
+    return {
+      success: true,
+      message: 'OTP has been sent to your official college email ID.',
+      viewState: newVsMatch ? newVsMatch[1] : vsMatch[1],
+      sessionCookie: cookiesStr
+    };
+  }
+
+  let errorMsg = 'Incorrect Password. Please check your credentials and try again.';
+  const alertMatch = postHtml.match(/<div class=['"]alert[^>]*>(.*?)<\/div>/si);
+  if (alertMatch) {
+    const cleanAlert = alertMatch[1].replace(/<[^>]+>/g, '').trim();
+    if (cleanAlert && cleanAlert.length > 2) errorMsg = cleanAlert;
+  }
+  throw new Error(errorMsg);
 }
 
-// Verify OTP and store authenticated session cookie
+// STEP 2: Direct native verification of OTP on college server (0 Worker usage)
 export async function verifyLoginOtp({ username, password, otp, viewState, sessionCookie }) {
-  const res = await fetch(`${AUTH_API_BASE}/api/auth?action=verify-otp`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: username.trim(), password, otp: otp.trim(), viewState, sessionCookie })
+  const params = new URLSearchParams();
+  params.append('__EVENTTARGET', '');
+  params.append('__EVENTARGUMENT', '');
+  params.append('__VIEWSTATE', viewState || '');
+  params.append('__VIEWSTATEGENERATOR', 'C2EE9ABB');
+  params.append('txtuser', username.trim());
+  params.append('txtPassword', password);
+  params.append('txtOTP', otp.trim());
+  params.append('g-recaptcha-response', '');
+  params.append('btnLogin', 'Verify OTP');
+
+  // Disable redirects so the native client captures the 302 Found response and Set-Cookie
+  const verifyRes = await CapacitorHttp.post({
+    url: `${ERP_BASE_URL}/Login.aspx`,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Cookie': sessionCookie || '',
+      'Referer': `${ERP_BASE_URL}/Login.aspx`
+    },
+    data: params.toString(),
+    disableRedirects: true
   });
 
-  const data = await res.json();
-  if (!res.ok || !data.success) {
-    throw new Error(data.error || 'Failed to verify OTP.');
+  const bodyStr = typeof verifyRes.data === 'string' ? verifyRes.data : '';
+  const locationHeader = verifyRes.headers?.['location'] || verifyRes.headers?.['Location'] || '';
+  const finalUrl = verifyRes.url || '';
+
+  // Get all session cookies directly from the Android cookie store
+  let cookiesStr = await getNativeCookiesString();
+
+  // If set-cookie was in header, parse it too
+  const rawSetCookie = verifyRes.headers?.['set-cookie'] || verifyRes.headers?.['Set-Cookie'];
+  if (rawSetCookie) {
+    const scArray = Array.isArray(rawSetCookie) ? rawSetCookie : [rawSetCookie];
+    const extracted = scArray.map(c => c.split(';')[0].trim()).join('; ');
+    if (extracted) {
+      cookiesStr = cookiesStr ? `${cookiesStr}; ${extracted}` : extracted;
+    }
   }
 
-  if (data.cookies) {
-    setStoredCookie(data.cookies);
+  const isSuccess =
+    verifyRes.status === 302 ||
+    locationHeader.includes('Home/Student') ||
+    finalUrl.includes('Home/Student') ||
+    bodyStr.includes('Home/Student') ||
+    cookiesStr.includes('MyAuth');
+
+  if (isSuccess) {
+    setStoredCookie(cookiesStr);
     clearAllCaches();
+    return { success: true, cookies: cookiesStr };
   }
-  return data;
+
+  // If login failed, extract college error message
+  const alertMatch = bodyStr.match(/<div class=['"]alert[^>]*>(.*?)<\/div>/si);
+  const errorMsg = alertMatch
+    ? alertMatch[1].replace(/<[^>]+>/g, '').trim()
+    : 'Invalid OTP. Please check the OTP sent to your college email.';
+  throw new Error(errorMsg);
 }
 
-// Low-level helper: native direct request to ERP endpoints
+// Low-level helper: native direct request to ERP endpoints (0 Worker usage)
 async function fetchErp(endpoint, method = 'POST', payload = null) {
   const cookie = getStoredCookie();
   if (!cookie) throw new Error('NO_SESSION');
 
   const cleanEndpoint = endpoint.replace(/^\//, '');
-  const targetUrl = Capacitor.isNativePlatform()
-    ? `${ERP_BASE_URL}/${cleanEndpoint}`
-    : `/api/abes/${cleanEndpoint}`;
+  const targetUrl = `${ERP_BASE_URL}/${cleanEndpoint}`;
 
-  if (Capacitor.isNativePlatform()) {
-    const res = await CapacitorHttp.request({
-      url: targetUrl,
-      method,
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Cookie': cookie,
-        'Referer': `${ERP_BASE_URL}/`
-      },
-      data: payload ? payload : undefined
-    });
-
-    if (res.status === 401 || res.status === 403) {
-      if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('abes:session_expired'));
-      throw new Error('SESSION_EXPIRED');
-    }
-
-    let json = res.data;
-    if (typeof json === 'string') {
-      if (json.includes('Login.aspx')) {
-        if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('abes:session_expired'));
-        throw new Error('SESSION_EXPIRED');
-      }
-      try {
-        json = JSON.parse(json);
-      } catch (e) {}
-    }
-
-    let data = json?.d !== undefined ? json.d : json;
-    if (typeof data === 'string' && (data.startsWith('[') || data.startsWith('{'))) {
-      data = JSON.parse(data);
-    }
-    return data;
-  }
-
-  // Web fallback
-  const res = await fetch(targetUrl, {
+  const res = await CapacitorHttp.request({
+    url: targetUrl,
     method,
     headers: {
-      'x-cookie': cookie,
-      ...(method === 'POST' ? { 'Content-Type': 'application/json; charset=utf-8' } : {})
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cookie': cookie,
+      'Referer': `${ERP_BASE_URL}/`
     },
-    body: method === 'POST' ? JSON.stringify(payload) : undefined
+    data: payload ? payload : undefined
   });
 
   if (res.status === 401 || res.status === 403) {
@@ -252,13 +293,18 @@ async function fetchErp(endpoint, method = 'POST', payload = null) {
     throw new Error('SESSION_EXPIRED');
   }
 
-  const json = await res.json();
-  if (typeof json === 'string' && json.includes('Login.aspx')) {
-    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('abes:session_expired'));
-    throw new Error('SESSION_EXPIRED');
+  let json = res.data;
+  if (typeof json === 'string') {
+    if (json.includes('Login.aspx')) {
+      if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('abes:session_expired'));
+      throw new Error('SESSION_EXPIRED');
+    }
+    try {
+      json = JSON.parse(json);
+    } catch (e) {}
   }
 
-  let data = json.d;
+  let data = json?.d !== undefined ? json.d : json;
   if (typeof data === 'string' && (data.startsWith('[') || data.startsWith('{'))) {
     data = JSON.parse(data);
   }
