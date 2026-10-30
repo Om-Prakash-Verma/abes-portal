@@ -224,6 +224,8 @@ export default function LoginPage({ onLoginSuccess, isDark, onToggleDark }) {
           isTyping={isTyping}
           hasError={Boolean(error)}
           isLoading={loading}
+          showAppAnnouncement={step === 1}
+          onOpenDownloadApp={() => setShowDownloadModal(true)}
         />
       </div>
 

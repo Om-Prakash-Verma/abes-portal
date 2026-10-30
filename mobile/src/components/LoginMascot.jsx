@@ -1,14 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Sparkles } from 'lucide-react';
 
 /**
- * 3D Claymorphic Interactive Mascot for Login Page
- * States:
- * - 'idle': follows cursor smoothly with 3D tilt and pupil tracking
- * - 'typing-id': happy, cheerful, smiling mouth, blushed cheeks, head bobs
- * - 'password': covers eyes with hands in 3D (peeks if showPassword is true)
- * - 'otp': covers eyes / shyly peeks with hands
- * - 'loading': thinking / nodding
- * - 'error': dizzy / shocked expression
+ * 3D Claymorphic Interactive Mascot for Mobile Login Page
  */
 export default function LoginMascot({
   mode = 'idle', // 'idle' | 'typing-id' | 'password' | 'otp'
@@ -21,27 +15,33 @@ export default function LoginMascot({
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isBlinking, setIsBlinking] = useState(false);
 
-  // Smooth mouse tracking
+  // Smooth touch/cursor tracking
   useEffect(() => {
-    const handleMouseMove = (e) => {
+    const handleMove = (e) => {
       if (!containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
 
-      const deltaX = e.clientX - centerX;
-      const deltaY = e.clientY - centerY;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-      // Limit max angle
-      const maxDistance = 450;
+      const deltaX = clientX - centerX;
+      const deltaY = clientY - centerY;
+
+      const maxDistance = 350;
       const normX = Math.max(-1, Math.min(1, deltaX / maxDistance));
       const normY = Math.max(-1, Math.min(1, deltaY / maxDistance));
 
       setMousePos({ x: normX, y: normY });
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('touchmove', handleMove);
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('touchmove', handleMove);
+    };
   }, []);
 
   // Periodic natural blinking
@@ -92,8 +92,7 @@ export default function LoginMascot({
 
         {/* Mascot Head (Tactile Clay Sphere) */}
         <div className="absolute top-6 left-1/2 -translate-x-1/2 w-32 h-28 bg-gradient-to-b from-indigo-400 via-indigo-600 to-indigo-700 rounded-[44px] shadow-2xl border-2 border-white/40 flex flex-col items-center justify-center overflow-visible">
-          
-          {/* Subtle Clay Highlight / Specular Reflection */}
+          {/* Subtle Clay Highlight */}
           <div className="absolute top-2 left-6 w-12 h-6 bg-white/30 rounded-full blur-[2px] transform -rotate-12" />
 
           {/* Cute Round Clay Ears */}
@@ -106,27 +105,21 @@ export default function LoginMascot({
 
           {/* Face Area */}
           <div className="relative z-10 flex flex-col items-center mt-1">
-            
             {/* Eyes Row */}
             <div className="flex items-center gap-5 mt-1">
-              
               {/* Left Eye */}
               <div className="relative w-7 h-8 bg-white rounded-full shadow-inner flex items-center justify-center overflow-hidden border border-slate-200">
                 {isCoveringEyes && !isPeeking ? (
-                  // Closed eye curve
                   <div className="w-4 h-1 bg-slate-700 rounded-full mt-1 transform rotate-6" />
                 ) : isBlinking ? (
-                  // Blinking line
                   <div className="w-4 h-1 bg-slate-700 rounded-full" />
                 ) : (
-                  // Open Eye with tracking pupil
                   <div
                     className="relative w-4 h-4 bg-slate-900 rounded-full transition-transform duration-75 flex items-center justify-center"
                     style={{
                       transform: `translate(${pupilOffsetX}px, ${pupilOffsetY}px)`
                     }}
                   >
-                    {/* Specular Catchlight Sparkle */}
                     <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-white rounded-full" />
                   </div>
                 )}
@@ -136,7 +129,6 @@ export default function LoginMascot({
               <div className="relative w-7 h-8 bg-white rounded-full shadow-inner flex items-center justify-center overflow-hidden border border-slate-200">
                 {isCoveringEyes ? (
                   isPeeking ? (
-                    // Peeking open eye!
                     <div
                       className="relative w-4 h-4 bg-slate-900 rounded-full transition-transform duration-75 flex items-center justify-center animate-pulse"
                       style={{
@@ -146,7 +138,6 @@ export default function LoginMascot({
                       <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-white rounded-full" />
                     </div>
                   ) : (
-                    // Closed eye curve
                     <div className="w-4 h-1 bg-slate-700 rounded-full mt-1 transform -rotate-6" />
                   )
                 ) : isBlinking ? (
@@ -162,41 +153,38 @@ export default function LoginMascot({
                   </div>
                 )}
               </div>
-
             </div>
 
-            {/* Rosy Cheeks (Glows brighter when typing ID) */}
+            {/* Rosy Cheeks */}
             <div className="flex items-center justify-between w-24 -mt-2 pointer-events-none">
-              <div className={`w-4 h-2 rounded-full bg-rose-400/60 blur-[1px] transition-all duration-300 ${
-                isHappy ? 'opacity-100 scale-125 bg-rose-400/90' : 'opacity-40'
-              }`} />
-              <div className={`w-4 h-2 rounded-full bg-rose-400/60 blur-[1px] transition-all duration-300 ${
-                isHappy ? 'opacity-100 scale-125 bg-rose-400/90' : 'opacity-40'
-              }`} />
+              <div
+                className={`w-4 h-2 rounded-full bg-rose-400/60 blur-[1px] transition-all duration-300 ${
+                  isHappy ? 'opacity-100 scale-125 bg-rose-400/90' : 'opacity-40'
+                }`}
+              />
+              <div
+                className={`w-4 h-2 rounded-full bg-rose-400/60 blur-[1px] transition-all duration-300 ${
+                  isHappy ? 'opacity-100 scale-125 bg-rose-400/90' : 'opacity-40'
+                }`}
+              />
             </div>
 
             {/* Mouth */}
             <div className="mt-1 flex items-center justify-center">
               {hasError ? (
-                // Shocked/sad mouth
                 <div className="w-4 h-2 border-t-2 border-slate-800 rounded-t-full mt-1" />
               ) : isHappy ? (
-                // Happy big open smile with tongue
                 <div className="w-6 h-3.5 bg-rose-700 rounded-b-full border-t-2 border-slate-800 overflow-hidden relative shadow-inner animate-pulse">
                   <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-2.5 bg-rose-400 rounded-full" />
                 </div>
               ) : isCoveringEyes ? (
-                // Shy little mouth
                 <div className="w-2.5 h-1.5 bg-slate-800 rounded-full" />
               ) : (
-                // Default subtle happy curve
                 <div className="w-4 h-2 border-b-2 border-slate-800 rounded-b-full" />
               )}
             </div>
-
           </div>
 
-          {/* 3D Hands / Paws for covering eyes */}
           {/* Left Hand */}
           <div
             className="absolute z-30 transition-all duration-500 ease-out"
@@ -210,7 +198,6 @@ export default function LoginMascot({
             }}
           >
             <div className="w-10 h-10 bg-gradient-to-t from-indigo-700 to-indigo-500 rounded-2xl shadow-clay-primary border-2 border-white/40 flex items-center justify-around p-1">
-              {/* Paw pads */}
               <div className="w-1.5 h-2 bg-indigo-300 rounded-full" />
               <div className="w-1.5 h-2.5 bg-indigo-300 rounded-full" />
               <div className="w-1.5 h-2 bg-indigo-300 rounded-full" />
@@ -235,9 +222,7 @@ export default function LoginMascot({
               <div className="w-1.5 h-2 bg-indigo-300 rounded-full" />
             </div>
           </div>
-
         </div>
-
       </div>
     </div>
   );

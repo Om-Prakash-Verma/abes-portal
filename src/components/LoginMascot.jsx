@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Smartphone, Sparkles, Download } from 'lucide-react';
 
 /**
  * 3D Claymorphic Interactive Mascot for Login Page
  * States:
- * - 'idle': follows cursor smoothly with 3D tilt and pupil tracking
+ * - 'idle': follows cursor smoothly, enthusiastically announces new Android APK
  * - 'typing-id': happy, cheerful, smiling mouth, blushed cheeks, head bobs
  * - 'password': covers eyes with hands in 3D (peeks if showPassword is true)
  * - 'otp': covers eyes / shyly peeks with hands
@@ -15,11 +16,14 @@ export default function LoginMascot({
   showPassword = false,
   isTyping = false,
   hasError = false,
-  isLoading = false
+  isLoading = false,
+  showAppAnnouncement = true,
+  onOpenDownloadApp
 }) {
   const containerRef = useRef(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isBlinking, setIsBlinking] = useState(false);
+  const [isWaving, setIsWaving] = useState(false);
 
   // Smooth mouse tracking
   useEffect(() => {
@@ -55,6 +59,17 @@ export default function LoginMascot({
     return () => clearInterval(blinkInterval);
   }, [mode]);
 
+  // Periodic greeting wave when idle
+  useEffect(() => {
+    if (mode === 'idle') {
+      const waveInterval = setInterval(() => {
+        setIsWaving(true);
+        setTimeout(() => setIsWaving(false), 1400);
+      }, 5000);
+      return () => clearInterval(waveInterval);
+    }
+  }, [mode]);
+
   // Determine current active posture
   const isCoveringEyes = (mode === 'password' || mode === 'otp');
   const isHappy = mode === 'typing-id';
@@ -71,9 +86,31 @@ export default function LoginMascot({
   return (
     <div
       ref={containerRef}
-      className="relative w-44 h-40 select-none pointer-events-none transition-transform duration-300"
+      className="relative w-48 h-40 select-none transition-transform duration-300"
       style={{ perspective: '800px' }}
     >
+      {/* ================= MASCOT ANNOUNCEMENT SPEECH BALLOON ================= */}
+      {showAppAnnouncement && mode === 'idle' && (
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onOpenDownloadApp) onOpenDownloadApp();
+          }}
+          className="absolute -top-12 -right-8 sm:-right-14 z-50 cursor-pointer pointer-events-auto group animate-bounce"
+          style={{ animationDuration: '2.8s' }}
+          title="Click to download Android APK"
+        >
+          <div className="relative px-3 py-1.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 text-white font-extrabold text-[11px] sm:text-xs shadow-xl flex items-center gap-1.5 border border-white/40 transform group-hover:scale-105 transition-all">
+            <Smartphone className="w-3.5 h-3.5 text-emerald-200 animate-pulse" />
+            <span className="whitespace-nowrap">Android App is here!</span>
+            <span className="text-[9px] bg-white/20 px-1.5 py-0.5 rounded font-mono font-bold">APK</span>
+
+            {/* Bubble arrow pointing down towards mascot head */}
+            <div className="absolute -bottom-1.5 left-5 w-3 h-3 bg-teal-600 transform rotate-45 border-r border-b border-white/20" />
+          </div>
+        </div>
+      )}
+
       {/* 3D Container with Parallax Tilt */}
       <div
         className="w-full h-full relative transition-transform ease-out duration-150"
@@ -91,8 +128,14 @@ export default function LoginMascot({
         <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-28 h-16 bg-gradient-to-b from-indigo-500 to-indigo-700 rounded-t-[40px] shadow-clay-primary border-t-2 border-white/30" />
 
         {/* Mascot Head (Tactile Clay Sphere) */}
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 w-32 h-28 bg-gradient-to-b from-indigo-400 via-indigo-600 to-indigo-700 rounded-[44px] shadow-2xl border-2 border-white/40 flex flex-col items-center justify-center overflow-visible">
-          
+        <div
+          onClick={() => {
+            if (mode === 'idle' && onOpenDownloadApp) onOpenDownloadApp();
+          }}
+          className={`absolute top-6 left-1/2 -translate-x-1/2 w-32 h-28 bg-gradient-to-b from-indigo-400 via-indigo-600 to-indigo-700 rounded-[44px] shadow-2xl border-2 border-white/40 flex flex-col items-center justify-center overflow-visible ${
+            mode === 'idle' ? 'cursor-pointer pointer-events-auto' : 'pointer-events-none'
+          }`}
+        >
           {/* Subtle Clay Highlight / Specular Reflection */}
           <div className="absolute top-2 left-6 w-12 h-6 bg-white/30 rounded-full blur-[2px] transform -rotate-12" />
 
@@ -106,27 +149,21 @@ export default function LoginMascot({
 
           {/* Face Area */}
           <div className="relative z-10 flex flex-col items-center mt-1">
-            
             {/* Eyes Row */}
             <div className="flex items-center gap-5 mt-1">
-              
               {/* Left Eye */}
               <div className="relative w-7 h-8 bg-white rounded-full shadow-inner flex items-center justify-center overflow-hidden border border-slate-200">
                 {isCoveringEyes && !isPeeking ? (
-                  // Closed eye curve
                   <div className="w-4 h-1 bg-slate-700 rounded-full mt-1 transform rotate-6" />
                 ) : isBlinking ? (
-                  // Blinking line
                   <div className="w-4 h-1 bg-slate-700 rounded-full" />
                 ) : (
-                  // Open Eye with tracking pupil
                   <div
                     className="relative w-4 h-4 bg-slate-900 rounded-full transition-transform duration-75 flex items-center justify-center"
                     style={{
                       transform: `translate(${pupilOffsetX}px, ${pupilOffsetY}px)`
                     }}
                   >
-                    {/* Specular Catchlight Sparkle */}
                     <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-white rounded-full" />
                   </div>
                 )}
@@ -136,7 +173,6 @@ export default function LoginMascot({
               <div className="relative w-7 h-8 bg-white rounded-full shadow-inner flex items-center justify-center overflow-hidden border border-slate-200">
                 {isCoveringEyes ? (
                   isPeeking ? (
-                    // Peeking open eye!
                     <div
                       className="relative w-4 h-4 bg-slate-900 rounded-full transition-transform duration-75 flex items-center justify-center animate-pulse"
                       style={{
@@ -146,7 +182,6 @@ export default function LoginMascot({
                       <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-white rounded-full" />
                     </div>
                   ) : (
-                    // Closed eye curve
                     <div className="w-4 h-1 bg-slate-700 rounded-full mt-1 transform -rotate-6" />
                   )
                 ) : isBlinking ? (
@@ -162,82 +197,98 @@ export default function LoginMascot({
                   </div>
                 )}
               </div>
-
             </div>
 
-            {/* Rosy Cheeks (Glows brighter when typing ID) */}
+            {/* Rosy Cheeks */}
             <div className="flex items-center justify-between w-24 -mt-2 pointer-events-none">
-              <div className={`w-4 h-2 rounded-full bg-rose-400/60 blur-[1px] transition-all duration-300 ${
-                isHappy ? 'opacity-100 scale-125 bg-rose-400/90' : 'opacity-40'
-              }`} />
-              <div className={`w-4 h-2 rounded-full bg-rose-400/60 blur-[1px] transition-all duration-300 ${
-                isHappy ? 'opacity-100 scale-125 bg-rose-400/90' : 'opacity-40'
-              }`} />
+              <div
+                className={`w-4 h-2 rounded-full bg-rose-400/60 blur-[1px] transition-all duration-300 ${
+                  isHappy || (mode === 'idle' && showAppAnnouncement) ? 'opacity-100 scale-125 bg-rose-400/90' : 'opacity-40'
+                }`}
+              />
+              <div
+                className={`w-4 h-2 rounded-full bg-rose-400/60 blur-[1px] transition-all duration-300 ${
+                  isHappy || (mode === 'idle' && showAppAnnouncement) ? 'opacity-100 scale-125 bg-rose-400/90' : 'opacity-40'
+                }`}
+              />
             </div>
 
             {/* Mouth */}
             <div className="mt-1 flex items-center justify-center">
               {hasError ? (
-                // Shocked/sad mouth
                 <div className="w-4 h-2 border-t-2 border-slate-800 rounded-t-full mt-1" />
-              ) : isHappy ? (
-                // Happy big open smile with tongue
+              ) : isHappy || (mode === 'idle' && showAppAnnouncement) ? (
                 <div className="w-6 h-3.5 bg-rose-700 rounded-b-full border-t-2 border-slate-800 overflow-hidden relative shadow-inner animate-pulse">
                   <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-2.5 bg-rose-400 rounded-full" />
                 </div>
               ) : isCoveringEyes ? (
-                // Shy little mouth
                 <div className="w-2.5 h-1.5 bg-slate-800 rounded-full" />
               ) : (
-                // Default subtle happy curve
                 <div className="w-4 h-2 border-b-2 border-slate-800 rounded-b-full" />
               )}
             </div>
-
           </div>
 
-          {/* 3D Hands / Paws for covering eyes */}
-          {/* Left Hand */}
+          {/* 3D Left Hand */}
           <div
-            className="absolute z-30 transition-all duration-500 ease-out"
+            className="absolute z-30 transition-all duration-500 ease-out pointer-events-none"
             style={{
               bottom: isCoveringEyes ? '32px' : '-16px',
               left: isCoveringEyes ? '20px' : '4px',
               transform: isCoveringEyes
                 ? (isPeeking ? 'translateY(18px) rotate(-18deg) scale(1)' : 'translateY(0px) rotate(22deg) scale(1.15)')
                 : 'translateY(24px) scale(0.8)',
-              opacity: isCoveringEyes ? 1 : 0.2
+              opacity: isCoveringEyes ? 1 : 0.3
             }}
           >
             <div className="w-10 h-10 bg-gradient-to-t from-indigo-700 to-indigo-500 rounded-2xl shadow-clay-primary border-2 border-white/40 flex items-center justify-around p-1">
-              {/* Paw pads */}
               <div className="w-1.5 h-2 bg-indigo-300 rounded-full" />
               <div className="w-1.5 h-2.5 bg-indigo-300 rounded-full" />
               <div className="w-1.5 h-2 bg-indigo-300 rounded-full" />
             </div>
           </div>
 
-          {/* Right Hand */}
+          {/* 3D Right Hand (Actively waves & holds a mini smartphone pointing to APK when idle!) */}
           <div
-            className="absolute z-30 transition-all duration-500 ease-out"
+            onClick={(e) => {
+              if (mode === 'idle' && onOpenDownloadApp) {
+                e.stopPropagation();
+                onOpenDownloadApp();
+              }
+            }}
+            className={`absolute z-30 transition-all duration-500 ease-out ${
+              mode === 'idle' ? 'cursor-pointer pointer-events-auto group' : 'pointer-events-none'
+            }`}
             style={{
-              bottom: isCoveringEyes ? '32px' : '-16px',
-              right: isCoveringEyes ? '20px' : '4px',
+              bottom: isCoveringEyes ? '32px' : '10px',
+              right: isCoveringEyes ? '20px' : '-18px',
               transform: isCoveringEyes
                 ? (isPeeking ? 'translateY(28px) rotate(25deg) scale(1.05)' : 'translateY(0px) rotate(-22deg) scale(1.15)')
-                : 'translateY(24px) scale(0.8)',
-              opacity: isCoveringEyes ? 1 : 0.2
+                : (isWaving ? 'translateY(-14px) rotate(-28deg) scale(1.1)' : 'translateY(-4px) rotate(-12deg) scale(1)'),
+              opacity: 1
             }}
+            title="Download Android APK"
           >
-            <div className="w-10 h-10 bg-gradient-to-t from-indigo-700 to-indigo-500 rounded-2xl shadow-clay-primary border-2 border-white/40 flex items-center justify-around p-1">
-              <div className="w-1.5 h-2 bg-indigo-300 rounded-full" />
-              <div className="w-1.5 h-2.5 bg-indigo-300 rounded-full" />
-              <div className="w-1.5 h-2 bg-indigo-300 rounded-full" />
+            <div className="relative w-11 h-11 bg-gradient-to-t from-indigo-700 via-indigo-600 to-indigo-500 rounded-2xl shadow-clay-primary border-2 border-white/40 flex items-center justify-center p-1 group-hover:scale-110 transition-transform">
+              {showAppAnnouncement && !isCoveringEyes ? (
+                /* Cute glowing mini phone held by mascot */
+                <div className="w-6 h-8 rounded-md bg-slate-900 border border-emerald-400 flex flex-col items-center justify-between p-0.5 shadow-md">
+                  <div className="w-1.5 h-0.5 bg-slate-600 rounded-full" />
+                  <div className="w-4 h-4 bg-emerald-500/80 rounded-sm flex items-center justify-center">
+                    <Download className="w-2.5 h-2.5 text-white" />
+                  </div>
+                  <div className="w-1 h-1 bg-emerald-400 rounded-full animate-ping" />
+                </div>
+              ) : (
+                <div className="flex items-center justify-around w-full">
+                  <div className="w-1.5 h-2 bg-indigo-300 rounded-full" />
+                  <div className="w-1.5 h-2.5 bg-indigo-300 rounded-full" />
+                  <div className="w-1.5 h-2 bg-indigo-300 rounded-full" />
+                </div>
+              )}
             </div>
           </div>
-
         </div>
-
       </div>
     </div>
   );

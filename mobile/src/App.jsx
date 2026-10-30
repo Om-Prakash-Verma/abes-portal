@@ -96,6 +96,7 @@ export default function App() {
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
   const [showFees, setShowFees] = useState(false);
+  const [manualUpdateTrigger, setManualUpdateTrigger] = useState(false);
 
   useEffect(() => {
     initGA();
@@ -231,7 +232,7 @@ export default function App() {
         isDark={isDark}
         onToggleDark={toggleTheme}
         sessionRemainingSec={sessionRemainingSec}
-        onOpenDownloadApp={() => {}}
+        onCheckUpdate={() => setManualUpdateTrigger(true)}
       />
 
       <main className="w-full px-4 sm:px-6 lg:px-8 2xl:px-12 py-8 flex-1 space-y-7">
@@ -427,12 +428,21 @@ export default function App() {
 
       </main>
 
-      <footer className="border-t border-white/60 dark:border-white/10 bg-[#EEF3F8]/80 dark:bg-black/90 backdrop-blur py-5 text-xs text-slate-500 dark:text-slate-400 font-semibold transition-colors">
+      <footer className="border-t border-white/60 dark:border-white/10 bg-[#EEF3F8]/80 dark:bg-black/90 backdrop-blur py-5 pb-[max(env(safe-area-inset-bottom,0px),1.5rem)] text-xs text-slate-500 dark:text-slate-400 font-semibold transition-colors">
         <div className="w-full px-4 sm:px-6 lg:px-8 2xl:px-12 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>ABES Engineering College • Native Android Portal</span>
-          <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
-            Direct Connection • Zero Worker Overhead
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+              Direct Connection • Zero Worker
+            </span>
+            <span>•</span>
+            <button
+              onClick={() => setManualUpdateTrigger(true)}
+              className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+            >
+              Check for Updates
+            </button>
+          </div>
         </div>
       </footer>
 
@@ -448,6 +458,7 @@ export default function App() {
         <ProfileModal
           profile={profile}
           onClose={() => setShowProfile(false)}
+          onCheckUpdate={() => setManualUpdateTrigger(true)}
         />
       )}
 
@@ -458,7 +469,10 @@ export default function App() {
       )}
 
       {/* GitHub Auto-Update Checker for Native Android */}
-      <AppUpdateChecker />
+      <AppUpdateChecker
+        manualTrigger={manualUpdateTrigger}
+        onResetManualTrigger={() => setManualUpdateTrigger(false)}
+      />
 
     </div>
   );

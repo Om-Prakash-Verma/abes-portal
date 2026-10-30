@@ -25,7 +25,7 @@ export default function Header({
   isDark,
   onToggleDark,
   sessionRemainingSec = 0,
-  onOpenDownloadApp
+  onCheckUpdate
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -67,7 +67,7 @@ export default function Header({
   const initial = studentName.charAt(0).toUpperCase();
 
   return (
-    <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-[#EEF3F8]/85 dark:bg-black/85 border-b border-slate-200/60 dark:border-white/10 transition-colors">
+    <header className="sticky top-0 z-40 w-full backdrop-blur-2xl bg-[#EEF3F8]/90 dark:bg-black/90 border-b border-slate-200/60 dark:border-white/10 transition-colors pt-[max(env(safe-area-inset-top,0px),34px)] sm:pt-2">
       <div className="w-full px-3.5 sm:px-6 lg:px-8 2xl:px-12 h-16 sm:h-18 flex items-center justify-between gap-3">
         
         {/* ================= LEFT: BRAND & ACADEMIC MONOGRAM ================= */}
@@ -132,14 +132,14 @@ export default function Header({
               <span>Fees</span>
             </button>
 
-            {/* Android APK Download Shortcut */}
+            {/* Quick Check for Updates */}
             <button
-              onClick={onOpenDownloadApp}
+              onClick={onCheckUpdate}
               className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg sm:rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 hover:bg-white/80 dark:hover:bg-white/10 active:scale-95 transition-all"
-              title="Download Android APK"
+              title="Check for App Updates"
             >
-              <Smartphone className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>Get APK</span>
+              <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span>v1.0.2</span>
             </button>
 
             {/* Dark / Light Mode Toggle */}
@@ -273,23 +273,25 @@ export default function Header({
                     </div>
                   </button>
 
-                  {/* Get Android App (Direct APK) */}
+                  {/* Check for App Updates */}
                   <button
                     onClick={() => {
                       setMenuOpen(false);
-                      onOpenDownloadApp();
+                      if (onCheckUpdate) onCheckUpdate();
                     }}
                     className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 transition text-left"
                   >
-                    <div className="w-7 h-7 rounded-lg bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
-                      <Smartphone className="w-4 h-4" />
+                    <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                      <Sparkles className="w-4 h-4 text-emerald-500" />
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <span>Get Android App</span>
-                        <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-extrabold bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:text-teal-300">APK</span>
+                      <div className="flex items-center justify-between">
+                        <span>Check for Updates</span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                          v1.0.2
+                        </span>
                       </div>
-                      <div className="text-[10px] text-slate-400 font-normal">Faster native app with 0 worker delay</div>
+                      <div className="text-[10px] text-slate-400 font-normal">Check latest APK release</div>
                     </div>
                   </button>
 

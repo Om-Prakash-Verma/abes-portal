@@ -1,6 +1,6 @@
 // Google Analytics 4 (GA4) Integration Helper
 // Put your GA4 Measurement ID here, or define VITE_GA_MEASUREMENT_ID in .env
-export const GA_MEASUREMENT_ID = import.meta.env?.VITE_GA_MEASUREMENT_ID || 'G-XXXXXXXXXX';
+export const GA_MEASUREMENT_ID = import.meta.env?.VITE_GA_MEASUREMENT_ID || 'G-D148LWSM0J';
 
 let isInitialized = false;
 

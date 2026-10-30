@@ -16,7 +16,7 @@ import {
   Moon,
   Sparkles
 } from 'lucide-react';
-import DownloadAppModal from './DownloadAppModal';
+import AppUpdateChecker, { CURRENT_APP_VERSION } from './AppUpdateChecker';
 import {
   sendLoginOtp,
   verifyLoginOtp,
@@ -39,7 +39,7 @@ export default function LoginPage({ onLoginSuccess, isDark, onToggleDark }) {
   // Saved credentials (Fast Login)
   const [rememberMe, setRememberMe] = useState(true);
   const [hasSavedCreds, setHasSavedCreds] = useState(false);
-  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [checkUpdateTrigger, setCheckUpdateTrigger] = useState(false);
 
   useEffect(() => {
     const saved = getSavedCredentials();
@@ -176,17 +176,17 @@ export default function LoginPage({ onLoginSuccess, isDark, onToggleDark }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#EEF3F8] dark:bg-black transition-colors flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8 relative">
+    <div className="min-h-screen bg-[#EEF3F8] dark:bg-black transition-colors flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8 relative pt-[max(env(safe-area-inset-top,0px),2.5rem)] pb-[max(env(safe-area-inset-bottom,0px),2rem)]">
       
-      {/* Top Floating Controls on Login Screen */}
-      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-30 flex items-center gap-2">
+      {/* Top Floating Controls on Login Screen with Safe Area */}
+      <div className="absolute top-[max(env(safe-area-inset-top,0px),1rem)] right-4 sm:top-6 sm:right-6 z-30 flex items-center gap-2">
         <button
-          onClick={() => setShowDownloadModal(true)}
-          className="clay-btn px-2.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1.5"
-          title="Download Android APK"
+          onClick={() => setCheckUpdateTrigger(true)}
+          className="clay-btn px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1.5"
+          title="Check for APK Updates"
         >
-          <Smartphone className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-          <span className="hidden xs:inline">Get App</span>
+          <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+          <span className="font-mono text-[11px]">v{CURRENT_APP_VERSION}</span>
         </button>
 
         <button
@@ -476,10 +476,10 @@ export default function LoginPage({ onLoginSuccess, isDark, onToggleDark }) {
         </div>
       </div>
 
-      {/* Download Native Android APK Modal */}
-      <DownloadAppModal
-        isOpen={showDownloadModal}
-        onClose={() => setShowDownloadModal(false)}
+      {/* In-App APK Updater for Mobile Login Screen */}
+      <AppUpdateChecker
+        manualTrigger={checkUpdateTrigger}
+        onResetManualTrigger={() => setCheckUpdateTrigger(false)}
       />
 
     </div>
