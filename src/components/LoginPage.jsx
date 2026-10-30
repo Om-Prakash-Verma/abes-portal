@@ -16,6 +16,7 @@ import {
   Moon,
   Sparkles
 } from 'lucide-react';
+import DownloadAppModal from './DownloadAppModal';
 import {
   sendLoginOtp,
   verifyLoginOtp,
@@ -38,6 +39,7 @@ export default function LoginPage({ onLoginSuccess, isDark, onToggleDark }) {
   // Saved credentials (Fast Login)
   const [rememberMe, setRememberMe] = useState(true);
   const [hasSavedCreds, setHasSavedCreds] = useState(false);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
 
   useEffect(() => {
     const saved = getSavedCredentials();
@@ -176,11 +178,20 @@ export default function LoginPage({ onLoginSuccess, isDark, onToggleDark }) {
   return (
     <div className="min-h-screen bg-[#EEF3F8] dark:bg-black transition-colors flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8 relative">
       
-      {/* Floating Theme Toggle on Login Screen */}
-      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-30">
+      {/* Top Floating Controls on Login Screen */}
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-30 flex items-center gap-2">
+        <button
+          onClick={() => setShowDownloadModal(true)}
+          className="clay-btn px-2.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1.5"
+          title="Download Android APK"
+        >
+          <Smartphone className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          <span className="hidden xs:inline">Get App</span>
+        </button>
+
         <button
           onClick={onToggleDark}
-          className="clay-btn p-2.5 text-slate-700 dark:text-amber-400 hover:text-indigo-600 dark:hover:text-amber-300"
+          className="clay-btn p-2 text-slate-700 dark:text-amber-400 hover:text-indigo-600 dark:hover:text-amber-300"
           title={isDark ? "Switch to Light Mode" : "Switch to Black Dark Mode"}
         >
           {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
@@ -464,6 +475,12 @@ export default function LoginPage({ onLoginSuccess, isDark, onToggleDark }) {
 
         </div>
       </div>
+
+      {/* Download Native Android APK Modal */}
+      <DownloadAppModal
+        isOpen={showDownloadModal}
+        onClose={() => setShowDownloadModal(false)}
+      />
 
     </div>
   );

@@ -7,8 +7,10 @@ import SubjectDetailModal from './components/SubjectDetailModal';
 import DateWiseAttendanceView from './components/DateWiseAttendanceView';
 import ProfileModal from './components/ProfileModal';
 import FeeReceiptsModal from './components/FeeReceiptsModal';
+import DownloadAppModal from './components/DownloadAppModal';
 import InstallPrompt from './components/InstallPrompt';
 import LoginPage from './components/LoginPage';
+import { initGA, trackLoginSuccess, trackAttendanceView } from './utils/analytics';
 import {
   fetchProfile,
   fetchAttendance,
@@ -100,6 +102,12 @@ export default function App() {
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
   const [showFees, setShowFees] = useState(false);
+  const [showDownloadApp, setShowDownloadApp] = useState(false);
+
+  // Initialize Google Analytics on initial mount
+  useEffect(() => {
+    initGA();
+  }, []);
 
   const loadAllData = async (targetSemId, forceRefresh = false) => {
     setError('');
@@ -237,6 +245,7 @@ export default function App() {
         isDark={isDark}
         onToggleDark={toggleTheme}
         sessionRemainingSec={sessionRemainingSec}
+        onOpenDownloadApp={() => setShowDownloadApp(true)}
       />
 
       {/* Main Full-Width Content Container */}
@@ -520,6 +529,12 @@ export default function App() {
           onClose={() => setShowFees(false)}
         />
       )}
+
+      {/* Download Native Android APK Modal */}
+      <DownloadAppModal
+        isOpen={showDownloadApp}
+        onClose={() => setShowDownloadApp(false)}
+      />
 
       {/* PWA Install & Offline Status */}
       <InstallPrompt />

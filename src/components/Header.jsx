@@ -11,7 +11,8 @@ import {
   Sparkles,
   ShieldCheck,
   Check,
-  Clock
+  Clock,
+  Smartphone
 } from 'lucide-react';
 
 export default function Header({
@@ -23,7 +24,8 @@ export default function Header({
   loading,
   isDark,
   onToggleDark,
-  sessionRemainingSec = 0
+  sessionRemainingSec = 0,
+  onOpenDownloadApp
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -128,6 +130,16 @@ export default function Header({
             >
               <Receipt className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
               <span>Fees</span>
+            </button>
+
+            {/* Android APK Download Shortcut */}
+            <button
+              onClick={onOpenDownloadApp}
+              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg sm:rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 hover:bg-white/80 dark:hover:bg-white/10 active:scale-95 transition-all"
+              title="Download Android APK"
+            >
+              <Smartphone className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span>Get APK</span>
             </button>
 
             {/* Dark / Light Mode Toggle */}
@@ -258,6 +270,26 @@ export default function Header({
                     <div className="flex-1">
                       <div>Fee Receipts</div>
                       <div className="text-[10px] text-slate-400 font-normal">Past payments & transactions</div>
+                    </div>
+                  </button>
+
+                  {/* Get Android App (Direct APK) */}
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onOpenDownloadApp();
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 transition text-left"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+                      <Smartphone className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span>Get Android App</span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-extrabold bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:text-teal-300">APK</span>
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-normal">Faster native app with 0 worker delay</div>
                     </div>
                   </button>
 
