@@ -18,9 +18,12 @@ import {
   clearSession,
   getCachedItem,
   TTL_PROFILE,
-  getSessionRemainingSeconds
+  getSessionRemainingSeconds,
+  pingKeepSessionAlive,
+  setSessionStartTime
 } from './services/api';
 import { initGA } from './utils/analytics';
+import { startBackgroundSessionKeeper, stopBackgroundSessionKeeper, getSessionKeeperStatus } from './services/sessionKeeper';
 import { Search, BookOpen, AlertTriangle, CheckCircle2, ArrowUpDown, Loader2, LayoutGrid, List, Layers, Calendar } from 'lucide-react';
 
 export default function App() {
@@ -33,17 +36,46 @@ export default function App() {
   const [error, setError] = useState('');
   const [sessionRemainingSec, setSessionRemainingSec] = useState(() => getSessionRemainingSeconds());
 
-  // 20-minute Microsoft IIS ASP.NET ERP Session Timeout Tracker
+  // 20-minute Microsoft IIS ASP.NET ERP Session Timeout Tracker + Native Background Session Keeper
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    setSessionRemainingSec(getSessionRemainingSeconds());
+    startBackgroundSessionKeeper();
 
-    const timer = setInterval(() => {
-      const remaining = getSessionRemainingSeconds();
+    const syncSession = async () => {
+      const status = await getSessionKeeperStatus();
+      if (status.lastPingTimestamp > 0) {
+        setSessionStartTime(status.lastPingTimestamp);
+      }
+      await pingKeepSessionAlive();
+      setSessionRemainingSec(getSessionRemainingSeconds());
+    };
+
+    syncSession();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncSession();
+      }
+    };
+
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', syncSession);
+
+    const timer = setInterval(async () => {
+      let remaining = getSessionRemainingSeconds();
+
+      // Auto-renew session ping if under 3 minutes
+      if (remaining > 0 && remaining <= 180) {
+        const renewed = await pingKeepSessionAlive();
+        if (renewed) {
+          remaining = getSessionRemainingSeconds();
+        }
+      }
       setSessionRemainingSec(remaining);
 
       if (remaining <= 0) {
+        stopBackgroundSessionKeeper();
         clearSession();
         setIsAuthenticated(false);
         setProfile({});
@@ -57,7 +89,11 @@ export default function App() {
       }
     }, 5000);
 
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', syncSession);
+    };
   }, [isAuthenticated]);
 
   // Dark mode state (OLED Black #000000 theme)
@@ -125,6 +161,7 @@ export default function App() {
     } catch (e) {
       console.error('Failed to load ERP data:', e);
       if (e.message === 'SESSION_EXPIRED' || e.message === 'NO_SESSION') {
+        stopBackgroundSessionKeeper();
         clearSession();
         setIsAuthenticated(false);
         setError('Your ERP session has expired or is invalid. Please log in again.');

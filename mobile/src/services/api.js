@@ -138,6 +138,32 @@ async function getNativeCookiesString() {
   return getStoredCookie();
 }
 
+/**
+ * Pings KeepSessionAlive.aspx directly to reset the 20-minute IIS timeout window.
+ */
+export async function pingKeepSessionAlive() {
+  try {
+    const cookies = await getNativeCookiesString();
+    if (!cookies) return false;
+
+    const res = await CapacitorHttp.get({
+      url: `${ERP_BASE_URL}/KeepSessionAlive.aspx`,
+      headers: {
+        'Cookie': cookies,
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 14) ABESPortalMobile/1.0'
+      }
+    });
+
+    if (res.status === 200) {
+      setSessionStartTime(Date.now());
+      return true;
+    }
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
+
 // -------------------------------------------------------------
 // 100% PURE NATIVE DIRECT AUTHENTICATION (0 CLOUDFLARE WORKER USAGE)
 // -------------------------------------------------------------
