@@ -36,18 +36,24 @@ export default function App() {
   const [error, setError] = useState('');
   const [sessionRemainingSec, setSessionRemainingSec] = useState(() => getSessionRemainingSeconds());
 
-  // 20-minute Microsoft IIS ASP.NET ERP Session Timeout Tracker + Native Background Session Keeper
+  // Native Background Session Keeper & In-App Auto-Renewal
   useEffect(() => {
     if (!isAuthenticated) return;
 
     startBackgroundSessionKeeper();
 
     const syncSession = async () => {
-      const status = await getSessionKeeperStatus();
-      if (status.lastPingTimestamp > 0) {
-        setSessionStartTime(status.lastPingTimestamp);
+      try {
+        const status = await getSessionKeeperStatus();
+        if (status && status.lastPingTimestamp > 0) {
+          setSessionStartTime(status.lastPingTimestamp);
+        }
+      } catch (e) {}
+
+      const renewed = await pingKeepSessionAlive();
+      if (renewed) {
+        setSessionStartTime(Date.now());
       }
-      await pingKeepSessionAlive();
       setSessionRemainingSec(getSessionRemainingSeconds());
     };
 
@@ -62,32 +68,23 @@ export default function App() {
     window.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', syncSession);
 
+    // Auto-renew timer: keeps session alive without kicking the user out
     const timer = setInterval(async () => {
       let remaining = getSessionRemainingSeconds();
 
-      // Auto-renew session ping if under 3 minutes
-      if (remaining > 0 && remaining <= 180) {
+      // When remaining time drops under 5 minutes (or 0), attempt to renew via keep-alive ping
+      if (remaining <= 300) {
         const renewed = await pingKeepSessionAlive();
         if (renewed) {
+          setSessionStartTime(Date.now());
           remaining = getSessionRemainingSeconds();
         }
       }
       setSessionRemainingSec(remaining);
-
-      if (remaining <= 0) {
-        stopBackgroundSessionKeeper();
-        clearSession();
-        setIsAuthenticated(false);
-        setProfile({});
-        setAttendance([]);
-        setAvailableSemesters([]);
-        setActiveSemId('');
-        setShowFees(false);
-        setShowProfile(false);
-        setSelectedSubject(null);
-        setError('Your 20-minute college ERP session has expired for security (Microsoft ASP.NET IIS timeout). Fast Login is ready — tap "Send OTP" to reconnect!');
-      }
-    }, 5000);
+      // NOTE: We NEVER proactively log out the user client-side on mobile.
+      // Offline attendance records & active dashboard are maintained continuously.
+      // Session expiration is only handled when a real server call fails with 302/SESSION_EXPIRED.
+    }, 10000);
 
     return () => {
       clearInterval(timer);

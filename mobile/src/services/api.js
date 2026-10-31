@@ -151,7 +151,8 @@ export async function pingKeepSessionAlive() {
       headers: {
         'Cookie': cookies,
         'User-Agent': 'Mozilla/5.0 (Linux; Android 14) ABESPortalMobile/1.0'
-      }
+      },
+      disableRedirects: true
     });
 
     if (res.status === 200) {

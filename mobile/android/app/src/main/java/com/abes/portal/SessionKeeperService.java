@@ -107,7 +107,7 @@ public class SessionKeeperService extends Service {
 
         scheduler = Executors.newSingleThreadScheduledExecutor();
         // Run first ping immediately, then repeat every 10 minutes
-        scheduler.scheduleWithFixedDelay(this::pingServer, 1, PING_INTERVAL_MINUTES, TimeUnit.MINUTES);
+        scheduler.scheduleWithFixedDelay(this::pingServer, 0, PING_INTERVAL_MINUTES, TimeUnit.MINUTES);
     }
 
     private void triggerSinglePing() {
@@ -165,19 +165,20 @@ public class SessionKeeperService extends Service {
     }
 
     private String getActiveCookie() {
-        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        String cookie = prefs.getString(KEY_COOKIE, null);
-        if (cookie != null && !cookie.isEmpty()) {
-            return cookie;
-        }
-
-        // Fallback: check Android native CookieManager
+        // First check Android native CookieManager
         try {
             String cmCookie = CookieManager.getInstance().getCookie("https://erp.abes.ac.in");
-            if (cmCookie != null && !cmCookie.isEmpty()) {
-                return cmCookie;
+            if (cmCookie != null && !cmCookie.trim().isEmpty()) {
+                return cmCookie.trim();
             }
         } catch (Exception ignored) {}
+
+        // Fallback: check SharedPreferences
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        String cookie = prefs.getString(KEY_COOKIE, null);
+        if (cookie != null && !cookie.trim().isEmpty()) {
+            return cookie.trim();
+        }
 
         return null;
     }
@@ -224,7 +225,7 @@ public class SessionKeeperService extends Service {
         return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("ABES Portal Active")
                 .setContentText(contentText)
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(android.R.drawable.stat_notify_sync)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setOngoing(true)
                 .setContentIntent(pendingIntent)
