@@ -78,16 +78,17 @@ jobs:
             ## 📱 ABES Portal Android Release (${{ github.ref_name }})
             
             ### 🚀 What's New in ${{ github.ref_name }}:
-            - **Persistent Signature Keystore**: Resolved package conflict errors so updates install seamlessly over existing installations.
-            - **Status Bar & Notch Safe Area Fix**: Navigation bar now sits cleanly below physical punch-hole cameras, clocks, and battery icons.
-            - **In-App Auto-Updater**: Manual and background update triggers inside Profile & Header menus with changelog viewer.
-            - **Zero Worker Overhead**: 100% direct native device-to-ERP communication via `CapacitorCookies` with 0 Cloudflare Worker usage.
-            - **Google Analytics 4**: Accurate real-time traffic telemetry with anonymous device metrics.
+            - **Native Background Session Keep-Alive**: Runs an Android Foreground Service that pings `KeepSessionAlive.aspx` every 10 minutes to prevent the 20-minute Microsoft IIS timeout even when the app is closed.
+            - **Auto-Renewing Session Countdown**: Automatically extends your active login session when resuming the app or when the timer drops below 3 minutes.
+            - **Zero Worker Overhead**: 100% direct native phone-to-ERP communication via `CapacitorCookies` and direct native networking with 0 Cloudflare Worker costs.
+            - **Permanent Signature Keystore**: Updates install seamlessly over existing installations without package conflict errors.
+            - **Status Bar & Notch Safe Area**: Header cleanly avoids physical notch, punch-holes, and battery indicators.
+            - **In-App Auto-Updater**: Instant update prompts and manual checks right inside the mobile app.
             - **OLED Dark Mode Optimization**: Pitch-black `#000000` battery saver design with high-contrast claymorphic cards.
             
             ### 📥 Installation Instructions:
             1. Download **`abes-portal.apk`** from Assets below.
-            2. *Important Note for Previous Testers*: If you installed an earlier preview build, **uninstall the previous test version once** (due to the new permanent release signature key).
-            3. Tap **Install** and open. All future updates will install seamlessly with 1-tap in-place updates!
+            2. Tap **Install** (or update).
+            3. Enjoy continuous login without repetitive OTP requests!
           draft: false
           prerelease: false
