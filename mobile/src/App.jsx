@@ -24,7 +24,7 @@ import {
 } from './services/api';
 import { initGA } from './utils/analytics';
 import { startBackgroundSessionKeeper, stopBackgroundSessionKeeper, getSessionKeeperStatus } from './services/sessionKeeper';
-import { Search, BookOpen, AlertTriangle, CheckCircle2, ArrowUpDown, Loader2, LayoutGrid, List, Layers, Calendar } from 'lucide-react';
+import { Search, BookOpen, AlertTriangle, CheckCircle2, ArrowUpDown, Loader2, LayoutGrid, List, Layers, Calendar, ChevronDown } from 'lucide-react';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(hasValidSession());
@@ -295,49 +295,52 @@ export default function App() {
             />
 
             <div className="space-y-4 pt-2">
-              <div className="flex flex-wrap items-center justify-between gap-3 pb-1 border-b border-slate-200/80 dark:border-white/10">
-                <div className="clay-inset p-1 rounded-2xl flex items-center gap-1">
+              {/* Modern Row 1: Perspective Switcher & Semester Selector */}
+              <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-200/60 dark:border-white/10">
+                <div className="bg-slate-200/70 dark:bg-white/10 p-1 rounded-2xl flex items-center gap-1">
                   <button
                     onClick={() => setViewPerspective('subject')}
-                    className={`px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl font-extrabold transition text-xs sm:text-sm flex items-center gap-2 ${
+                    className={`px-3 py-1.5 rounded-xl font-black text-xs flex items-center gap-1.5 transition-all ${
                       viewPerspective === 'subject'
-                        ? 'bg-indigo-600 text-white shadow-clay-primary scale-[1.01]'
+                        ? 'bg-indigo-600 text-white shadow-md'
                         : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
-                    <Layers className="w-4 h-4" />
-                    <span>Subject-Wise</span>
+                    <Layers className="w-3.5 h-3.5" />
+                    <span>Subjects</span>
+                    <span className="text-[10px] font-mono font-bold px-1 rounded bg-black/20 dark:bg-white/20">
+                      {individualSubjects.length}
+                    </span>
                   </button>
 
                   <button
                     onClick={() => setViewPerspective('date')}
-                    className={`px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl font-extrabold transition text-xs sm:text-sm flex items-center gap-2 ${
+                    className={`px-3 py-1.5 rounded-xl font-black text-xs flex items-center gap-1.5 transition-all ${
                       viewPerspective === 'date'
-                        ? 'bg-indigo-600 text-white shadow-clay-primary scale-[1.01]'
+                        ? 'bg-indigo-600 text-white shadow-md'
                         : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
-                    <Calendar className="w-4 h-4" />
-                    <span>Date-Wise Timeline</span>
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span>Timeline</span>
                   </button>
                 </div>
 
-                {viewPerspective === 'subject' && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-extrabold text-slate-500 dark:text-slate-400 hidden xs:inline">
-                      Semester:
-                    </span>
+                {/* Semester Selector Pill */}
+                {availableSemesters.length > 0 && viewPerspective === 'subject' && (
+                  <div className="relative">
                     <select
                       value={activeSemId}
                       onChange={(e) => handleSemesterChange(e.target.value)}
-                      className="clay-btn py-1.5 px-3 text-xs font-extrabold text-indigo-700 dark:text-indigo-400 bg-transparent cursor-pointer focus:outline-none"
+                      className="px-3 py-1.5 text-xs font-black rounded-xl bg-slate-200/70 dark:bg-white/10 text-indigo-700 dark:text-indigo-400 border border-slate-300/40 dark:border-white/10 cursor-pointer focus:outline-none pr-7 appearance-none"
                     >
                       {availableSemesters.map(s => (
-                        <option key={s.id} value={s.id} className="dark:bg-[#0B0B0E] dark:text-white">
+                        <option key={s.id} value={s.id} className="dark:bg-[#0E0E14] dark:text-white font-bold">
                           {s.name} ({s.id})
                         </option>
                       ))}
                     </select>
+                    <ChevronDown className="w-3.5 h-3.5 text-indigo-500 pointer-events-none absolute right-2 top-1/2 -translate-y-1/2" />
                   </div>
                 )}
               </div>
@@ -349,75 +352,79 @@ export default function App() {
                   onSelectSubject={(sub) => setSelectedSubject(sub)}
                 />
               ) : (
-                <div className="space-y-4">
-                  <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-                    <div className="relative flex-1 max-w-md">
+                <div className="space-y-3.5">
+                  {/* Modern Row 2: Search Bar + Status Filter Chips + View Mode */}
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+                    {/* Search */}
+                    <div className="relative flex-1">
                       <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                       <input
                         type="text"
-                        placeholder="Search by subject name or code..."
+                        placeholder="Search courses or codes..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm font-semibold rounded-xl clay-inset text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
+                        className="w-full pl-9 pr-3 py-2 text-xs font-bold rounded-xl bg-slate-200/60 dark:bg-white/5 border border-slate-300/60 dark:border-white/10 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
                       />
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-                      <div className="clay-inset p-1 rounded-xl flex items-center gap-1">
+                    {/* Filter Pills & View Mode */}
+                    <div className="flex items-center justify-between sm:justify-start gap-2">
+                      <div className="bg-slate-200/70 dark:bg-white/5 border border-slate-300/40 dark:border-white/10 p-0.5 rounded-xl flex items-center text-xs">
                         <button
                           onClick={() => setFilterType('ALL')}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                          className={`px-2.5 py-1 rounded-lg text-xs font-black transition ${
                             filterType === 'ALL'
-                              ? 'bg-white dark:bg-white/10 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                              ? 'bg-white dark:bg-indigo-600 text-slate-900 dark:text-white shadow-sm'
+                              : 'text-slate-600 dark:text-slate-400'
                           }`}
                         >
                           All ({individualSubjects.length})
                         </button>
                         <button
-                          onClick={() => setFilterType('SAFE')}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
-                            filterType === 'SAFE'
-                              ? 'bg-white dark:bg-white/10 text-emerald-600 dark:text-emerald-400 shadow-sm'
-                              : 'text-slate-600 dark:text-slate-400 hover:text-emerald-600'
-                          }`}
-                        >
-                          Safe ({safeCount})
-                        </button>
-                        <button
                           onClick={() => setFilterType('DANGER')}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+                          className={`px-2.5 py-1 rounded-lg text-xs font-black transition ${
                             filterType === 'DANGER'
-                              ? 'bg-white dark:bg-white/10 text-rose-600 dark:text-rose-400 shadow-sm'
-                              : 'text-slate-600 dark:text-slate-400 hover:text-rose-600'
+                              ? 'bg-rose-500 text-white shadow-sm'
+                              : 'text-rose-600 dark:text-rose-400'
                           }`}
                         >
                           Alert ({dangerCount})
                         </button>
+                        <button
+                          onClick={() => setFilterType('SAFE')}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-black transition ${
+                            filterType === 'SAFE'
+                              ? 'bg-emerald-500 text-white shadow-sm'
+                              : 'text-emerald-600 dark:text-emerald-400'
+                          }`}
+                        >
+                          Safe ({safeCount})
+                        </button>
                       </div>
 
-                      <div className="clay-inset p-1 rounded-xl flex items-center gap-0.5">
+                      {/* View Mode Toggle: Grid vs Compact List */}
+                      <div className="bg-slate-200/70 dark:bg-white/5 border border-slate-300/40 dark:border-white/10 p-0.5 rounded-xl flex items-center gap-0.5 shrink-0">
                         <button
                           onClick={() => setViewMode('grid')}
                           className={`p-1.5 rounded-lg transition ${
                             viewMode === 'grid'
-                              ? 'bg-white dark:bg-white/10 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                              : 'text-slate-500 hover:text-slate-800'
+                              ? 'bg-white dark:bg-white/15 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                              : 'text-slate-400'
                           }`}
-                          title="Grid View"
+                          title="Card Grid"
                         >
-                          <LayoutGrid className="w-4 h-4" />
+                          <LayoutGrid className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => setViewMode('table')}
                           className={`p-1.5 rounded-lg transition ${
                             viewMode === 'table'
-                              ? 'bg-white dark:bg-white/10 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                              : 'text-slate-500 hover:text-slate-800'
+                              ? 'bg-white dark:bg-white/15 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                              : 'text-slate-400'
                           }`}
-                          title="Table View"
+                          title="Compact List"
                         >
-                          <List className="w-4 h-4" />
+                          <List className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>

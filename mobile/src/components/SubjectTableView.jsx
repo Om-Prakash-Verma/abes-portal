@@ -1,111 +1,86 @@
 import React from 'react';
 import { ChevronRight, ShieldCheck, AlertTriangle } from 'lucide-react';
 
-export default function SubjectTableView({ subjects, onSelect, targetPercent = 75 }) {
+export default function SubjectTableView({ subjects = [], onSelect, targetPercent = 75 }) {
   return (
-    <div className="w-full clay-card overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-slate-200/80 text-[11px] uppercase tracking-wider font-extrabold text-slate-500 bg-[#E8EEF5]/60">
-              <th className="py-4 px-6">Course / Subject</th>
-              <th className="py-4 px-4">Code</th>
-              <th className="py-4 px-4">Attended / Total</th>
-              <th className="py-4 px-4 min-w-[150px]">Progress</th>
-              <th className="py-4 px-4 text-center">Percentage</th>
-              <th className="py-4 px-4">Runway Status</th>
-              <th className="py-4 px-6 text-right">Details</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200/60 text-xs">
-            {subjects.map((sub, idx) => {
-              const { SubCollegeCode, SubName, NoOfLecture, Present, Percentage } = sub;
-              const isSafe = Percentage >= targetPercent;
-              const isBorderline = Percentage >= targetPercent - 10 && Percentage < targetPercent;
+    <div className="w-full space-y-2.5">
+      {subjects.map((sub, idx) => {
+        const { SubCollegeCode, SubName, NoOfLecture, Present, Percentage } = sub;
+        const isSafe = Percentage >= targetPercent;
+        const isBorderline = Percentage >= targetPercent - 10 && Percentage < targetPercent;
 
-              let statusText = '';
-              if (isSafe) {
-                const canBunk = Math.max(0, Math.floor((Present * 100) / targetPercent - NoOfLecture));
-                statusText = canBunk > 0 ? `Can miss ${canBunk} classes` : 'On the edge (attend next)';
-              } else {
-                const mustAttend = Math.max(0, Math.ceil((targetPercent * NoOfLecture - 100 * Present) / (100 - targetPercent)));
-                statusText = `Must attend ${mustAttend} classes`;
-              }
+        let statusText = '';
+        if (isSafe) {
+          const canBunk = Math.max(0, Math.floor((Present * 100) / targetPercent - NoOfLecture));
+          statusText = canBunk > 0 ? `Can miss ${canBunk} classes` : 'Attend next lecture';
+        } else {
+          const mustAttend = Math.max(0, Math.ceil((targetPercent * NoOfLecture - 100 * Present) / (100 - targetPercent)));
+          statusText = `Must attend ${mustAttend} classes`;
+        }
 
-              const badgeClass = isSafe
-                ? 'bg-emerald-100 text-emerald-800 shadow-clay-success'
-                : isBorderline
-                ? 'bg-amber-100 text-amber-800 shadow-sm border border-amber-300'
-                : 'bg-rose-100 text-rose-800 shadow-clay-danger';
+        const badgeClass = isSafe
+          ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300/40'
+          : isBorderline
+          ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300/40'
+          : 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-300/40';
 
-              const barColor = isSafe
-                ? 'bg-emerald-500'
-                : isBorderline
-                ? 'bg-amber-500'
-                : 'bg-rose-500';
+        const barColor = isSafe
+          ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
+          : isBorderline
+          ? 'bg-gradient-to-r from-amber-500 to-yellow-400'
+          : 'bg-gradient-to-r from-rose-500 to-red-400';
 
-              return (
-                <tr
-                  key={SubCollegeCode || idx}
-                  onClick={() => onSelect(sub)}
-                  className="hover:bg-white/60 transition-colors cursor-pointer group"
-                >
-                  {/* Course Name */}
-                  <td className="py-4 px-6 font-extrabold text-slate-900 group-hover:text-indigo-600 transition-colors">
-                    {SubName}
-                  </td>
+        return (
+          <div
+            key={SubCollegeCode || idx}
+            onClick={() => onSelect(sub)}
+            className="p-3.5 sm:p-4 rounded-2xl bg-white/90 dark:bg-[#0E0E14] border border-slate-200/80 dark:border-white/10 hover:border-indigo-400 dark:hover:border-indigo-500/50 shadow-sm active:scale-[0.99] transition-all cursor-pointer group"
+          >
+            {/* Top row: Code + Percentage badge + Chevron */}
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[10px] font-mono font-black uppercase text-slate-500 dark:text-slate-400 clay-inset px-2 py-0.5 rounded-md">
+                {SubCollegeCode}
+              </span>
 
-                  {/* Code */}
-                  <td className="py-4 px-4 font-mono text-[11px]">
-                    <span className="clay-inset px-2.5 py-1 rounded-lg font-bold text-slate-600">
-                      {SubCollegeCode || 'N/A'}
-                    </span>
-                  </td>
+              <div className="flex items-center gap-2">
+                <span className={`text-xs font-black px-2.5 py-0.5 rounded-full tabular-nums ${badgeClass}`}>
+                  {Percentage}%
+                </span>
+                <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+            </div>
 
-                  {/* Attended / Total */}
-                  <td className="py-4 px-4 font-bold text-slate-700 tabular-nums">
-                    <span className="text-slate-900 font-extrabold">{Present}</span> / {NoOfLecture}
-                  </td>
+            {/* Course Title */}
+            <h4 className="text-sm font-extrabold text-slate-900 dark:text-white mt-1.5 line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+              {SubName}
+            </h4>
 
-                  {/* Progress Bar */}
-                  <td className="py-4 px-4">
-                    <div className="relative w-full clay-inset h-2.5 rounded-full overflow-hidden p-0.5">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 shadow-sm ${barColor}`}
-                        style={{ width: `${Math.min(Percentage, 100)}%` }}
-                      />
-                    </div>
-                  </td>
+            {/* Progress bar */}
+            <div className="mt-2.5 w-full h-1.5 rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${barColor}`}
+                style={{ width: `${Math.min(Percentage, 100)}%` }}
+              />
+            </div>
 
-                  {/* Percentage Badge */}
-                  <td className="py-4 px-4 text-center">
-                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-extrabold tabular-nums ${badgeClass}`}>
-                      {Percentage}%
-                    </span>
-                  </td>
+            {/* Bottom info strip: Attendance count + Bunk status */}
+            <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-semibold">
+              <span>{Present} of {NoOfLecture} attended</span>
 
-                  {/* Runway Status */}
-                  <td className="py-4 px-4">
-                    <span className={`inline-flex items-center gap-1.5 font-bold text-xs ${
-                      isSafe ? 'text-emerald-700' : 'text-rose-700'
-                    }`}>
-                      {isSafe ? <ShieldCheck className="w-4 h-4 shrink-0" /> : <AlertTriangle className="w-4 h-4 shrink-0" />}
-                      {statusText}
-                    </span>
-                  </td>
-
-                  {/* Action Link */}
-                  <td className="py-4 px-6 text-right">
-                    <span className="text-slate-500 group-hover:text-indigo-600 inline-flex items-center gap-1 font-bold transition-colors text-xs">
-                      View Logs <ChevronRight className="w-3.5 h-3.5" />
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+              <span className={`flex items-center gap-1 font-bold ${
+                isSafe
+                  ? 'text-emerald-700 dark:text-emerald-400'
+                  : isBorderline
+                  ? 'text-amber-700 dark:text-amber-400'
+                  : 'text-rose-700 dark:text-rose-400'
+              }`}>
+                {isSafe ? <ShieldCheck className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
+                <span>{statusText}</span>
+              </span>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

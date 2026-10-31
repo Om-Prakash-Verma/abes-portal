@@ -10,60 +10,53 @@ export default function SubjectCard({ subject, onSelect, targetPercent = 75 }) {
   let statusText = '';
   if (isSafe) {
     const canBunk = Math.max(0, Math.floor((Present * 100) / targetPercent - NoOfLecture));
-    statusText = canBunk > 0 ? `Can miss ${canBunk} classes` : 'On the edge (attend next)';
+    statusText = canBunk > 0 ? `Can miss ${canBunk} classes` : 'Attend next lecture';
   } else {
     const mustAttend = Math.max(0, Math.ceil((targetPercent * NoOfLecture - 100 * Present) / (100 - targetPercent)));
     statusText = `Must attend ${mustAttend} classes`;
   }
 
   const badgeClass = isSafe
-    ? 'bg-emerald-100 text-emerald-800 shadow-clay-success'
+    ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300/40 shadow-sm'
     : isBorderline
-    ? 'bg-amber-100 text-amber-800 shadow-sm border border-amber-300'
-    : 'bg-rose-100 text-rose-800 shadow-clay-danger';
+    ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300/40 shadow-sm'
+    : 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-300/40 shadow-sm';
 
   const barColor = isSafe
-    ? 'bg-emerald-500'
+    ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
     : isBorderline
-    ? 'bg-amber-500'
-    : 'bg-rose-500';
+    ? 'bg-gradient-to-r from-amber-500 to-yellow-400'
+    : 'bg-gradient-to-r from-rose-500 to-red-400';
 
   return (
     <div
       onClick={() => onSelect(subject)}
-      className="clay-card p-5 cursor-pointer flex flex-col justify-between group"
+      className="clay-card p-4 sm:p-5 cursor-pointer flex flex-col justify-between group bg-white/90 dark:bg-[#0D0D12] border border-slate-200/80 dark:border-white/10 hover:border-indigo-400 dark:hover:border-indigo-500/50 rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-[0.99]"
     >
       <div>
-        {/* Top: Code & Percentage Pill */}
+        {/* Top: Code Pill & Percentage */}
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-600 clay-inset px-2.5 py-1 rounded-lg">
+          <span className="text-[10px] sm:text-[11px] font-mono font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 clay-inset px-2.5 py-1 rounded-lg">
             {SubCollegeCode || 'N/A'}
           </span>
-          <span className={`text-xs font-extrabold px-3 py-1 rounded-full tabular-nums ${badgeClass}`}>
+          <span className={`text-xs font-black px-2.5 py-0.5 rounded-full tabular-nums ${badgeClass}`}>
             {Percentage}%
           </span>
         </div>
 
-        {/* Title */}
-        <h3 className="text-sm font-extrabold text-slate-900 mt-3.5 line-clamp-2 group-hover:text-indigo-600 transition-colors">
+        {/* Course Title */}
+        <h3 className="text-sm font-extrabold text-slate-900 dark:text-white mt-3 line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
           {SubName}
         </h3>
 
-        {/* Progress Bar with Target Indicator */}
-        <div className="mt-4">
-          <div className="flex justify-between text-xs text-slate-500 mb-1.5 font-bold tabular-nums">
+        {/* Progress Bar & Counter */}
+        <div className="mt-3.5">
+          <div className="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 mb-1.5 font-bold tabular-nums">
             <span>{Present} of {NoOfLecture} attended</span>
             <span>Target: {targetPercent}%</span>
           </div>
 
-          <div className="relative w-full h-2.5 clay-inset rounded-full overflow-hidden p-0.5">
-            {/* Target Threshold Line */}
-            <div
-              className="absolute top-0 bottom-0 w-0.5 bg-slate-500 z-10"
-              style={{ left: `${targetPercent}%` }}
-              title={`Target ${targetPercent}%`}
-            />
-            {/* The Actual Progress Fill */}
+          <div className="relative w-full h-2 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden p-0.5">
             <div
               className={`h-full rounded-full transition-all duration-700 shadow-sm ${barColor}`}
               style={{ width: `${Math.min(Percentage, 100)}%` }}
@@ -72,16 +65,21 @@ export default function SubjectCard({ subject, onSelect, targetPercent = 75 }) {
         </div>
       </div>
 
-      {/* Footer: Bunk Prediction & Link */}
-      <div className="mt-4 pt-3.5 border-t border-slate-200/80 flex items-center justify-between text-xs">
-        <span className={`font-bold inline-flex items-center gap-1.5 text-xs ${
-          isSafe ? 'text-emerald-700' : 'text-rose-700'
+      {/* Footer: Bunk Prediction & Logs Action */}
+      <div className="mt-3.5 pt-3 border-t border-slate-200/80 dark:border-white/10 flex items-center justify-between text-xs">
+        <span className={`font-bold inline-flex items-center gap-1.5 text-[11px] sm:text-xs ${
+          isSafe
+            ? 'text-emerald-700 dark:text-emerald-400'
+            : isBorderline
+            ? 'text-amber-700 dark:text-amber-400'
+            : 'text-rose-700 dark:text-rose-400'
         }`}>
-          {isSafe ? <ShieldCheck className="w-4 h-4 shrink-0" /> : <AlertTriangle className="w-4 h-4 shrink-0" />}
-          {statusText}
+          {isSafe ? <ShieldCheck className="w-3.5 h-3.5 shrink-0" /> : <AlertTriangle className="w-3.5 h-3.5 shrink-0" />}
+          <span className="truncate max-w-[190px]">{statusText}</span>
         </span>
-        <span className="text-slate-500 group-hover:text-indigo-600 flex items-center gap-0.5 font-bold transition-colors text-xs">
-          Logs <ChevronRight className="w-3.5 h-3.5" />
+
+        <span className="text-slate-400 dark:text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 flex items-center font-extrabold transition-colors text-[11px] shrink-0">
+          Logs <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
         </span>
       </div>
     </div>

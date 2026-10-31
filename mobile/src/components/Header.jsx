@@ -162,14 +162,14 @@ export default function Header({
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className={`clay-btn flex items-center gap-2 p-1 sm:pl-1.5 sm:pr-2.5 sm:py-1 rounded-xl sm:rounded-2xl transition-all ${
+              className={`flex items-center gap-1.5 p-1 rounded-full border border-slate-300/60 dark:border-white/10 hover:border-indigo-400 bg-white/60 dark:bg-white/5 active:scale-95 transition-all ${
                 menuOpen ? 'ring-2 ring-indigo-500/50 scale-[0.98]' : ''
               }`}
               title="Student Account & Options"
               aria-expanded={menuOpen}
             >
               {/* Monogram Initial Avatar */}
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-gradient-to-tr from-indigo-500 to-indigo-600 text-white flex items-center justify-center font-extrabold text-xs shadow-sm shrink-0">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-indigo-600 text-white flex items-center justify-center font-black text-xs shadow-sm shrink-0">
                 {initial}
               </div>
 

@@ -1,7 +1,13 @@
 import React from 'react';
 import { ShieldCheck, AlertTriangle, SlidersHorizontal } from 'lucide-react';
 
-export default function OverallAttendanceCard({ totalData, targetPercent, setTargetPercent, subjectsCount, dangerCount }) {
+export default function OverallAttendanceCard({
+  totalData,
+  targetPercent = 75,
+  setTargetPercent,
+  subjectsCount = 0,
+  dangerCount = 0
+}) {
   const present = totalData?.Present || 0;
   const total = totalData?.NoOfLecture || 0;
   const absent = totalData?.Absent || 0;
@@ -20,29 +26,33 @@ export default function OverallAttendanceCard({ totalData, targetPercent, setTar
   }
 
   const safeCount = Math.max(0, subjectsCount - dangerCount);
+  const attendanceRate = total > 0 ? ((present / total) * 100).toFixed(0) : 0;
 
   return (
-    <div className="w-full space-y-3 sm:space-y-4">
+    <div className="w-full clay-card p-4 sm:p-6 bg-gradient-to-br from-white/95 via-slate-50/90 to-indigo-50/40 dark:from-[#111116] dark:via-[#0A0A0D] dark:to-[#120E1C] border border-slate-200/80 dark:border-white/10 shadow-xl rounded-3xl overflow-hidden transition-all">
       
-      {/* Subheader & Target Threshold Selector */}
-      <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2.5 px-0.5">
-        <h2 className="text-[11px] sm:text-xs font-extrabold uppercase tracking-widest text-slate-500">
-          Attendance Overview
-        </h2>
+      {/* ================= TOP CONTROLS ROW ================= */}
+      <div className="flex items-center justify-between gap-2 pb-3.5 border-b border-slate-200/70 dark:border-white/10">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+          <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Attendance Overview
+          </span>
+        </div>
 
-        {/* Clay Target Threshold Switcher */}
-        <div className="clay-inset p-1 rounded-2xl flex items-center gap-1 self-start xs:self-auto text-xs">
-          <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 pl-2 pr-0.5 flex items-center gap-1">
-            <SlidersHorizontal className="w-3 h-3 text-indigo-600" /> Target:
+        {/* Target Threshold Switcher */}
+        <div className="clay-inset p-0.5 rounded-xl flex items-center gap-1 text-xs">
+          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 pl-2 pr-0.5 hidden xs:inline">
+            Target:
           </span>
           {[75, 80, 85].map((t) => (
             <button
               key={t}
               onClick={() => setTargetPercent(t)}
-              className={`px-2.5 sm:px-3 py-1 font-bold rounded-xl transition-all text-[11px] sm:text-xs ${
+              className={`px-2.5 py-1 font-black rounded-lg transition-all text-[11px] ${
                 targetPercent === t
-                  ? 'bg-indigo-600 text-white shadow-clay-primary scale-[1.02]'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-indigo-600 text-white shadow-clay-primary scale-[1.03]'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               {t}%
@@ -51,141 +61,116 @@ export default function OverallAttendanceCard({ totalData, targetPercent, setTar
         </div>
       </div>
 
-      {/* 2-Column on Mobile, 4-Column on Desktop */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+      {/* ================= HERO CONTENT: OVERALL & RUNWAY ================= */}
+      <div className="py-4 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
         
-        {/* Metric 1: Overall Percentage */}
-        <div className="clay-card p-3.5 sm:p-6 flex flex-col justify-between">
-          <div className="flex items-center justify-between gap-1">
-            <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider truncate">
-              Overall
+        {/* Left: Overall Attendance Score */}
+        <div className="flex flex-col justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+              Total Attendance
             </span>
-            <span className={`inline-flex items-center gap-0.5 px-1.5 sm:px-2.5 py-0.5 rounded-full text-[9px] sm:text-[11px] font-extrabold shrink-0 ${
-              isSafe
-                ? 'bg-emerald-100 text-emerald-800 shadow-clay-success'
-                : 'bg-rose-100 text-rose-800 shadow-clay-danger'
-            }`}>
-              {isSafe ? `+${delta}%` : `${delta}%`}
+            <span
+              className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-black ${
+                isSafe
+                  ? 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-300/40'
+                  : 'bg-rose-100 dark:bg-rose-950/70 text-rose-800 dark:text-rose-300 border border-rose-300/40'
+              }`}
+            >
+              {isSafe ? `+${delta}% Safe` : `${delta}% Alert`}
             </span>
           </div>
 
-          <div className="mt-2.5 sm:mt-4 flex items-baseline gap-1 sm:gap-2">
-            <span className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 tabular-nums">
+          <div className="mt-1 flex items-baseline gap-2">
+            <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight tabular-nums">
               {percentage}%
             </span>
-            <span className="text-[10px] sm:text-xs font-bold text-slate-400 hidden xs:inline">
-              / min {targetPercent}%
+            <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">
+              Target: {targetPercent}%
             </span>
           </div>
 
-          <div className="mt-2.5 sm:mt-4 w-full clay-inset h-2 sm:h-2.5 rounded-full overflow-hidden p-0.5">
+          {/* Progress Bar with Target Notch */}
+          <div className="mt-3 relative w-full h-2 rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden p-0.5">
             <div
-              className={`h-full rounded-full transition-all duration-700 ${isSafe ? 'bg-emerald-500 shadow-sm' : 'bg-rose-500 shadow-sm'}`}
+              className={`h-full rounded-full transition-all duration-700 ${
+                isSafe
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-400 shadow-sm'
+                  : 'bg-gradient-to-r from-rose-500 to-amber-500 shadow-sm'
+              }`}
               style={{ width: `${Math.min(percentage, 100)}%` }}
             />
           </div>
         </div>
 
-        {/* Metric 2: Bunk Runway / Class Buffer */}
-        <div className="clay-card p-3.5 sm:p-6 flex flex-col justify-between">
-          <div className="flex items-center justify-between gap-1">
-            <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider truncate">
-              {isSafe ? 'Bunk Runway' : 'Shortage'}
+        {/* Right: Bunk Runway Pill Card */}
+        <div className={`p-3.5 rounded-2xl border transition-all ${
+          isSafe
+            ? 'bg-emerald-500/10 dark:bg-emerald-950/30 border-emerald-300/50 dark:border-emerald-800/40'
+            : 'bg-rose-500/10 dark:bg-rose-950/30 border-rose-300/50 dark:border-rose-800/40'
+        }`}>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              {isSafe ? 'Bunk Runway' : 'Attendance Shortage'}
             </span>
-            <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 ${
-              isSafe ? 'bg-emerald-100 text-emerald-700 shadow-clay-success' : 'bg-rose-100 text-rose-700 shadow-clay-danger'
+            <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
+              isSafe
+                ? 'bg-emerald-500 text-white shadow-sm'
+                : 'bg-rose-500 text-white shadow-sm'
             }`}>
-              {isSafe ? <ShieldCheck className="w-3.5 h-3.5 sm:w-5 sm:h-5" /> : <AlertTriangle className="w-3.5 h-3.5 sm:w-5 sm:h-5" />}
+              {isSafe ? <ShieldCheck className="w-3.5 h-3.5" /> : <AlertTriangle className="w-3.5 h-3.5" />}
             </div>
           </div>
 
-          <div className="mt-2.5 sm:mt-4 flex items-baseline gap-1">
-            <span className={`text-xl sm:text-4xl font-extrabold tracking-tight tabular-nums truncate ${
-              isSafe ? 'text-emerald-700' : 'text-rose-700'
+          <div className="mt-1">
+            <div className={`text-xl sm:text-2xl font-black tracking-tight tabular-nums ${
+              isSafe ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'
             }`}>
               {isSafe ? `${bunkPossible} Classes` : `${attendNeeded} Classes`}
-            </span>
-          </div>
-
-          <p className="mt-2 text-[10px] sm:text-xs font-medium text-slate-500 line-clamp-2">
-            {isSafe ? `Can miss ${bunkPossible} more classes.` : `Must attend next ${attendNeeded} classes.`}
-          </p>
-        </div>
-
-        {/* Metric 3: Lectures Breakdown */}
-        <div className="clay-card p-3.5 sm:p-6 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Lectures
-            </span>
-            <span className="text-[10px] sm:text-xs font-mono font-bold text-slate-500">
-              {total} Total
-            </span>
-          </div>
-
-          <div className="mt-2.5 sm:mt-4 flex items-center justify-between gap-2 sm:gap-4">
-            <div>
-              <div className="text-xl sm:text-3xl font-extrabold text-emerald-700 tabular-nums">
-                {present}
-              </div>
-              <span className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                Attended
-              </span>
             </div>
-
-            <div className="h-7 sm:h-10 w-px bg-slate-300/60" />
-
-            <div>
-              <div className="text-xl sm:text-3xl font-extrabold text-rose-700 tabular-nums">
-                {absent}
-              </div>
-              <span className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                Missed
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-2 text-[10px] sm:text-xs text-slate-500 font-medium truncate">
-            Rate: <strong className="text-slate-800 tabular-nums">{((present / (total || 1)) * 100).toFixed(0)}%</strong>
+            <p className="text-[11px] font-medium text-slate-600 dark:text-slate-300 mt-0.5">
+              {isSafe
+                ? `You can safely miss ${bunkPossible} more lectures.`
+                : `Must attend next ${attendNeeded} classes consecutively.`}
+            </p>
           </div>
         </div>
 
-        {/* Metric 4: Subject Health */}
-        <div className="clay-card p-3.5 sm:p-6 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">
-              Courses
-            </span>
-            <span className="text-[10px] sm:text-xs font-mono font-bold text-slate-500">
-              {subjectsCount} Total
-            </span>
-          </div>
+      </div>
 
-          <div className="mt-2.5 sm:mt-4 flex items-center justify-between gap-2 sm:gap-4">
-            <div>
-              <div className="text-xl sm:text-3xl font-extrabold text-emerald-700 tabular-nums">
-                {safeCount}
-              </div>
-              <span className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                Safe
-              </span>
-            </div>
+      {/* ================= BOTTOM METRICS STRIP ================= */}
+      <div className="mt-2 pt-3 border-t border-slate-200/70 dark:border-white/10 grid grid-cols-3 gap-2 text-center text-xs">
+        
+        {/* Attended */}
+        <div className="flex flex-col items-center justify-center">
+          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">
+            Attended
+          </span>
+          <span className="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
+            {present} <span className="text-[10px] text-slate-400 font-normal">/ {total}</span>
+          </span>
+        </div>
 
-            <div className="h-7 sm:h-10 w-px bg-slate-300/60" />
+        {/* Missed */}
+        <div className="flex flex-col items-center justify-center border-x border-slate-200/70 dark:border-white/10 px-1">
+          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">
+            Missed
+          </span>
+          <span className="text-sm sm:text-base font-black text-rose-600 dark:text-rose-400 tabular-nums">
+            {absent} <span className="text-[10px] text-slate-400 font-normal">({attendanceRate}%)</span>
+          </span>
+        </div>
 
-            <div>
-              <div className="text-xl sm:text-3xl font-extrabold text-rose-700 tabular-nums">
-                {dangerCount}
-              </div>
-              <span className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                Shortage
-              </span>
-            </div>
-          </div>
-
-          <p className="mt-2 text-[10px] sm:text-xs font-medium text-slate-500 truncate">
-            {dangerCount === 0 ? 'All courses safe' : `${dangerCount} courses < ${targetPercent}%`}
-          </p>
+        {/* Courses Health */}
+        <div className="flex flex-col items-center justify-center">
+          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">
+            Courses
+          </span>
+          <span className="text-sm sm:text-base font-black text-slate-800 dark:text-white tabular-nums">
+            <span className="text-emerald-600 dark:text-emerald-400">{safeCount}</span>
+            <span className="text-slate-400 font-normal"> / </span>
+            <span className="text-rose-600 dark:text-rose-400">{dangerCount}</span>
+          </span>
         </div>
 
       </div>
