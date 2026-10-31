@@ -9,11 +9,13 @@ import {
   Moon,
   User,
   ChevronDown,
+  ChevronRight,
   Sparkles,
   ShieldCheck,
   Check,
   Clock,
-  Smartphone
+  Smartphone,
+  Zap
 } from 'lucide-react';
 
 export default function Header({
@@ -66,6 +68,9 @@ export default function Header({
   const branchName = profile.Branch_Name || 'CSE';
   const semesterName = profile.Samester_Name || 'Sem V';
   const initial = studentName.charAt(0).toUpperCase();
+  const photoUrl = admissionNo
+    ? `/api/abes/Services/ProfilePic.aspx?ID=${admissionNo}`
+    : null;
 
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-2xl bg-[#EEF3F8]/90 dark:bg-black/90 border-b border-slate-200/60 dark:border-white/10 transition-colors pt-[max(env(safe-area-inset-top,0px),34px)] sm:pt-2">
@@ -169,9 +174,19 @@ export default function Header({
               title="Student Account & Options"
               aria-expanded={menuOpen}
             >
-              {/* Monogram Initial Avatar */}
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-indigo-600 text-white flex items-center justify-center font-black text-xs shadow-sm shrink-0">
-                {initial}
+              {/* Monogram / Photo Avatar */}
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-indigo-600 text-white flex items-center justify-center font-black text-xs shadow-sm shrink-0 overflow-hidden relative">
+                <span className="font-bold text-xs">{initial}</span>
+                {photoUrl && (
+                  <img
+                    src={photoUrl}
+                    alt={studentName}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                )}
               </div>
 
               {/* Student Name & Dropdown Chevron */}
@@ -198,42 +213,57 @@ export default function Header({
                 {/* Popover Student Hero Card */}
                 <div className="px-4 py-3 border-b border-slate-200/80 dark:border-white/10">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center font-extrabold text-sm shadow-md shrink-0">
-                      {initial}
+                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-700 to-violet-600 text-white flex items-center justify-center font-extrabold text-sm shadow-md shrink-0 overflow-hidden relative border border-white/20">
+                      <span className="font-extrabold text-sm">{initial}</span>
+                      {photoUrl && (
+                        <img
+                          src={photoUrl}
+                          alt={studentName}
+                          className="absolute inset-0 w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-extrabold text-slate-900 dark:text-white truncate">
                         {studentName}
                       </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-mono font-medium truncate">
-                        {admissionNo || 'ABES Engineering College'}
-                      </p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono font-medium truncate">
+                          {admissionNo || 'Student'}
+                        </span>
+                        {(branchName || semesterName) && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 shrink-0">
+                            {branchName} • {semesterName}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="mt-2.5 flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/5 text-[11px]">
-                    <span className="text-slate-500 dark:text-slate-400 font-medium">Academic Status</span>
-                    <span className="inline-flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                      Active Verified
-                    </span>
-                  </div>
+                  {/* Dual Status Pill Cards (No text wrapping) */}
+                  <div className="mt-3 grid grid-cols-2 gap-2 pt-2.5 border-t border-slate-100 dark:border-white/5">
+                    <div className="p-2 rounded-xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/5">
+                      <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                        <ShieldCheck className="w-3 h-3 text-emerald-500 shrink-0" />
+                        <span className="truncate">Student Status</span>
+                      </div>
+                      <div className="mt-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 truncate">
+                        Active Verified
+                      </div>
+                    </div>
 
-                  <div className="mt-2 flex items-center justify-between text-[11px]">
-                    <span className="text-slate-500 dark:text-slate-400 font-medium">ERP Session Status</span>
-                    <span
-                      className={`inline-flex items-center gap-1 font-mono font-bold ${
-                        sessionRemainingSec > 300
-                          ? 'text-indigo-600 dark:text-indigo-400'
-                          : sessionRemainingSec > 60
-                          ? 'text-amber-600 dark:text-amber-400'
-                          : 'text-emerald-600 dark:text-emerald-400'
-                      }`}
-                      title="Microsoft IIS ASP.NET 20-minute server session expiration clock"
-                    >
-                      <Clock className="w-3 h-3" />
-                      <span>{sessionRemainingSec > 0 ? `${formatTimer(sessionRemainingSec)} • Active` : 'Live (Auto-Sync 24/7)'}</span>
-                    </span>
+                    <div className="p-2 rounded-xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/5">
+                      <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                        <Zap className="w-3 h-3 text-indigo-500 shrink-0 animate-pulse" />
+                        <span className="truncate">Background Sync</span>
+                      </div>
+                      <div className="mt-0.5 text-[11px] font-mono font-bold text-indigo-600 dark:text-indigo-400 truncate">
+                        {sessionRemainingSec > 0 ? `${formatTimer(sessionRemainingSec)}` : 'Live 24/7'}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -246,15 +276,18 @@ export default function Header({
                       setMenuOpen(false);
                       onOpenProfile();
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 transition text-left"
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 active:scale-[0.99] transition text-left"
                   >
-                    <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                      <User className="w-4 h-4" />
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                        <User className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div>Student Profile</div>
+                        <div className="text-[10px] text-slate-400 font-normal">Personal & academic details</div>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <div>Student Profile</div>
-                      <div className="text-[10px] text-slate-400 font-normal">Personal & academic details</div>
-                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 shrink-0" />
                   </button>
 
                   {/* Fee Receipts */}
@@ -263,15 +296,18 @@ export default function Header({
                       setMenuOpen(false);
                       onOpenFees();
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 transition text-left"
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 active:scale-[0.99] transition text-left"
                   >
-                    <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                      <Receipt className="w-4 h-4" />
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                        <Receipt className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div>Fee Receipts</div>
+                        <div className="text-[10px] text-slate-400 font-normal">Past payments & transactions</div>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <div>Fee Receipts</div>
-                      <div className="text-[10px] text-slate-400 font-normal">Past payments & transactions</div>
-                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 shrink-0" />
                   </button>
 
                   {/* Check for App Updates */}
@@ -280,20 +316,20 @@ export default function Header({
                       setMenuOpen(false);
                       if (onCheckUpdate) onCheckUpdate();
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 transition text-left"
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 active:scale-[0.99] transition text-left"
                   >
-                    <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                      <Sparkles className="w-4 h-4 text-emerald-500" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <span>Check for Updates</span>
-                        <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
-                          v{APP_CONFIG.version}
-                        </span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-lg bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0">
+                        <Sparkles className="w-4 h-4 text-violet-500" />
                       </div>
-                      <div className="text-[10px] text-slate-400 font-normal">Check latest APK release</div>
+                      <div>
+                        <div>Check for Updates</div>
+                        <div className="text-[10px] text-slate-400 font-normal">Check latest APK release</div>
+                      </div>
                     </div>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-extrabold bg-violet-100 text-violet-800 dark:bg-violet-950/60 dark:text-violet-300">
+                      v{APP_CONFIG.version}
+                    </span>
                   </button>
 
                   {/* Force ERP Sync */}
@@ -303,55 +339,43 @@ export default function Header({
                       onRefresh();
                     }}
                     disabled={loading}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 transition text-left disabled:opacity-50"
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 active:scale-[0.99] transition text-left disabled:opacity-50"
                   >
-                    <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                      <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                      </div>
+                      <div>
+                        <div>Force ERP Refresh</div>
+                        <div className="text-[10px] text-slate-400 font-normal">Bypass 12h cache & fetch live</div>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <div>Force ERP Refresh</div>
-                      <div className="text-[10px] text-slate-400 font-normal">Bypass 12h cache & fetch live</div>
-                    </div>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400">
+                      Live
+                    </span>
                   </button>
 
-                </div>
-
-                {/* Theme Selector Segment inside Dropdown */}
-                <div className="px-3 py-2 mx-1.5 my-1 rounded-xl bg-slate-50 dark:bg-black/50 border border-slate-200/60 dark:border-white/5">
-                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1.5">
-                    <span>Appearance</span>
-                    <span className="text-[10px] font-medium text-slate-400">
-                      {isDark ? 'OLED Pitch Black' : 'Light Neumorphic'}
+                  {/* Sleek 1-Row Appearance Toggle */}
+                  <button
+                    onClick={onToggleDark}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 active:scale-[0.99] transition text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                        {isDark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                      </div>
+                      <div>
+                        <div>Appearance</div>
+                        <div className="text-[10px] text-slate-400 font-normal">
+                          {isDark ? 'OLED Pitch Black' : 'Light Neumorphic'}
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-slate-200/60 dark:bg-white/10 text-slate-700 dark:text-slate-300">
+                      {isDark ? 'Dark' : 'Light'}
                     </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    <button
-                      onClick={() => {
-                        if (isDark) onToggleDark();
-                      }}
-                      className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition ${
-                        !isDark
-                          ? 'bg-white text-indigo-600 shadow-sm border border-slate-200'
-                          : 'text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      <Sun className="w-3.5 h-3.5" />
-                      <span>Light</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (!isDark) onToggleDark();
-                      }}
-                      className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition ${
-                        isDark
-                          ? 'bg-[#18181E] text-amber-400 shadow-sm border border-white/10'
-                          : 'text-slate-500 hover:text-slate-800'
-                      }`}
-                    >
-                      <Moon className="w-3.5 h-3.5" />
-                      <span>Dark</span>
-                    </button>
-                  </div>
+                  </button>
+
                 </div>
 
                 {/* Disconnect / Sign Out */}
@@ -361,15 +385,20 @@ export default function Header({
                       setMenuOpen(false);
                       onLogout();
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition text-left"
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 active:scale-[0.98] transition text-left"
                   >
-                    <div className="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
-                      <LogOut className="w-4 h-4" />
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                        <LogOut className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div>Disconnect Session</div>
+                        <div className="text-[10px] text-rose-400/80 font-normal">Clear cookie & sign out</div>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <div>Disconnect Session</div>
-                      <div className="text-[10px] text-rose-400/80 font-normal">Clear cookie & sign out</div>
-                    </div>
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-rose-100/60 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400">
+                      Sign Out
+                    </span>
                   </button>
                 </div>
 
