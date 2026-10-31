@@ -14,7 +14,8 @@ import {
   CheckCircle2,
   Sun,
   Moon,
-  Sparkles
+  Sparkles,
+  Download
 } from 'lucide-react';
 import DownloadAppModal from './DownloadAppModal';
 import {
@@ -232,6 +233,37 @@ export default function LoginPage({ onLoginSuccess, isDark, onToggleDark }) {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="clay-card py-6 sm:py-8 px-5 sm:px-9 pt-9 sm:pt-10">
           
+          {/* Prominent App Announcement Banner: Eliminate 20-min Relogin */}
+          {step === 1 && (
+            <div
+              onClick={() => setShowDownloadModal(true)}
+              className="mb-4 sm:mb-5 p-3 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 border border-emerald-300/60 dark:border-emerald-800/40 hover:border-emerald-500 transition-all hover:scale-[1.01] cursor-pointer group shadow-sm relative overflow-hidden"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-clay-primary group-hover:rotate-6 transition-transform">
+                  <Smartphone className="w-5 h-5 animate-pulse" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
+                      Tired of Re-Logging In?
+                    </h4>
+                    <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-500 text-white shadow-sm shrink-0">
+                      Zero OTPs
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium leading-snug mt-0.5">
+                    The Android APK keeps your session alive 24/7 in the background with <strong>no 20-min logout</strong>.
+                  </p>
+                </div>
+                <div className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[11px] shadow-sm transition-colors">
+                  <Download className="w-3.5 h-3.5" />
+                  <span className="hidden xs:inline">Get APK</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Official ERP Credentials Notice */}
           <div className="mb-4 sm:mb-5 p-2.5 sm:p-3 rounded-xl bg-indigo-50/90 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 flex items-center gap-2 text-[11px] sm:text-xs font-bold text-indigo-900 dark:text-indigo-200">
             <ShieldCheck className="w-4 h-4 text-indigo-600 shrink-0" />

@@ -11,6 +11,12 @@ import { Smartphone, Sparkles, Download } from 'lucide-react';
  * - 'loading': thinking / nodding
  * - 'error': dizzy / shocked expression
  */
+const ANNOUNCEMENT_MESSAGES = [
+  { text: "Tired of 20-min OTP relogins? 🥱", tag: "NO MORE OTPS" },
+  { text: "Download APK to stay logged in! ⚡", tag: "24/7 ACTIVE" },
+  { text: "Zero Relogin • Direct ERP Connection 🚀", tag: "GET APK v1.0.5" }
+];
+
 export default function LoginMascot({
   mode = 'idle', // 'idle' | 'typing-id' | 'password' | 'otp'
   showPassword = false,
@@ -24,6 +30,16 @@ export default function LoginMascot({
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isBlinking, setIsBlinking] = useState(false);
   const [isWaving, setIsWaving] = useState(false);
+  const [msgIndex, setMsgIndex] = useState(0);
+
+  // Rotate announcement messages
+  useEffect(() => {
+    if (!showAppAnnouncement || mode !== 'idle') return;
+    const interval = setInterval(() => {
+      setMsgIndex((prev) => (prev + 1) % ANNOUNCEMENT_MESSAGES.length);
+    }, 3200);
+    return () => clearInterval(interval);
+  }, [showAppAnnouncement, mode]);
 
   // Smooth mouse tracking
   useEffect(() => {
@@ -89,24 +105,36 @@ export default function LoginMascot({
       className="relative w-48 h-40 select-none transition-transform duration-300"
       style={{ perspective: '800px' }}
     >
-      {/* ================= MASCOT ANNOUNCEMENT SPEECH BALLOON ================= */}
+      {/* ================= ENHANCED MASCOT ANNOUNCEMENT SPEECH BALLOON ================= */}
       {showAppAnnouncement && mode === 'idle' && (
         <div
           onClick={(e) => {
             e.stopPropagation();
             if (onOpenDownloadApp) onOpenDownloadApp();
           }}
-          className="absolute -top-12 -right-8 sm:-right-14 z-50 cursor-pointer pointer-events-auto group animate-bounce"
-          style={{ animationDuration: '2.8s' }}
-          title="Click to download Android APK"
+          className="absolute -top-16 -right-12 sm:-right-20 z-50 cursor-pointer pointer-events-auto group animate-bounce"
+          style={{ animationDuration: '3.2s' }}
+          title="Click to download Android APK and eliminate 20-min re-logins!"
         >
-          <div className="relative px-3 py-1.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 text-white font-extrabold text-[11px] sm:text-xs shadow-xl flex items-center gap-1.5 border border-white/40 transform group-hover:scale-105 transition-all">
-            <Smartphone className="w-3.5 h-3.5 text-emerald-200 animate-pulse" />
-            <span className="whitespace-nowrap">Android App is here!</span>
-            <span className="text-[9px] bg-white/20 px-1.5 py-0.5 rounded font-mono font-bold">APK</span>
+          <div className="relative px-3.5 py-2 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 text-white font-extrabold text-[11px] sm:text-xs shadow-2xl flex flex-col gap-0.5 border border-white/50 transform group-hover:scale-105 transition-all">
+            <div className="flex items-center gap-1.5">
+              <Smartphone className="w-3.5 h-3.5 text-emerald-200 animate-pulse shrink-0" />
+              <span className="whitespace-nowrap font-black tracking-tight">
+                {ANNOUNCEMENT_MESSAGES[msgIndex].text}
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between gap-2 mt-0.5 pt-0.5 border-t border-white/20 text-[9px]">
+              <span className="text-emerald-200 font-mono font-bold tracking-wide">
+                {ANNOUNCEMENT_MESSAGES[msgIndex].tag}
+              </span>
+              <span className="bg-white/25 px-1.5 py-0.5 rounded font-mono font-black flex items-center gap-0.5 group-hover:bg-white group-hover:text-emerald-700 transition-colors">
+                <Download className="w-2.5 h-2.5" /> Tap APK
+              </span>
+            </div>
 
             {/* Bubble arrow pointing down towards mascot head */}
-            <div className="absolute -bottom-1.5 left-5 w-3 h-3 bg-teal-600 transform rotate-45 border-r border-b border-white/20" />
+            <div className="absolute -bottom-1.5 left-8 w-3 h-3 bg-teal-600 transform rotate-45 border-r border-b border-white/20" />
           </div>
         </div>
       )}
