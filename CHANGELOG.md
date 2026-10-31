@@ -2,6 +2,15 @@
 
 All notable changes to the ABES Portal web and mobile applications are documented in this file.
 
+## [1.0.9] - 2026-10-31
+
+### Added & Improved
+- **Single Source of Truth Configuration**: Centralized all versioning (`version.json`) across native Android Gradle, Web UI, and Mobile UI.
+- **Dynamic Release Notes Pipeline**: In-app update checker and GitHub Releases now display real version-specific changelogs extracted directly from CHANGELOG.md.
+- **Synchronized Version Badges**: Header buttons, profile badges, and mascot prompts now update automatically with zero manual code edits.
+
+---
+
 ## [1.0.8] - 2026-10-31
 
 ### Fixed
