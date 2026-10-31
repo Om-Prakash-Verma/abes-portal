@@ -11,10 +11,11 @@ import {
   Bell
 } from 'lucide-react';
 import { trackApkDownloadClick } from '../utils/analytics';
+import { APP_CONFIG } from '../config/appConfig';
 
-export const LATEST_APK_VERSION = '1.0.8';
-const GITHUB_RELEASES_URL = 'https://github.com/Om-Prakash-Verma/abes-portal/releases/latest';
-const DIRECT_APK_DOWNLOAD_URL = 'https://github.com/Om-Prakash-Verma/abes-portal/releases/latest/download/abes-portal.apk';
+export const LATEST_APK_VERSION = APP_CONFIG.version;
+const GITHUB_RELEASES_URL = `https://github.com/${APP_CONFIG.githubRepo}/releases/latest`;
+const DIRECT_APK_DOWNLOAD_URL = APP_CONFIG.apkDownloadUrl;
 
 export default function DownloadAppModal({ isOpen, onClose }) {
   if (!isOpen) return null;

@@ -1,4 +1,14 @@
 apply plugin: 'com.android.application'
+import groovy.json.JsonSlurper
+
+def versionPropsFile = file('../../../version.json')
+def appVersion = "1.0.8"
+def appVersionCode = 8
+if (versionPropsFile.exists()) {
+    def versionJson = new JsonSlurper().parse(versionPropsFile)
+    appVersion = versionJson.version
+    appVersionCode = versionJson.versionCode as Integer
+}
 
 android {
     namespace "com.abes.portal"
@@ -15,8 +25,8 @@ android {
         applicationId "com.abes.portal"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 8
-        versionName "1.0.8"
+        versionCode appVersionCode
+        versionName appVersion
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

@@ -68,27 +68,44 @@ jobs:
           name: abes-portal-apk
           path: mobile-builds/abes-portal.apk
 
+      - name: Generate Release Body from CHANGELOG
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "Extracting release notes for: $VERSION"
+          python3 -c "
+          import re, os
+          tag = os.environ.get('GITHUB_REF_NAME', '').lstrip('v')
+          try:
+              with open('CHANGELOG.md', 'r', encoding='utf-8') as f:
+                  content = f.read()
+              pattern = rf'## \[{re.escape(tag)}\][^\n]*\n(.*?)(?=\n## \[|\Z)'
+              match = re.search(pattern, content, re.DOTALL)
+              notes = match.group(1).strip() if match else 'Performance improvements and bug fixes.'
+              notes = re.sub(r'\n---\s*$', '', notes).strip()
+          except Exception:
+              notes = 'Performance improvements and bug fixes.'
+
+          body = f'''## 📱 ABES Portal Android Release (v{tag})
+
+          ### 🚀 What\'s New in v{tag}:
+          {notes}
+
+          ### 📥 Installation Instructions:
+          1. Download **\`abes-portal.apk\`** from Assets below.
+          2. Tap **Install** (or update over existing installation).
+          3. Enjoy seamless ERP access without repetitive OTP requests!
+          '''
+          with open('release_body.md', 'w', encoding='utf-8') as out:
+              out.write(body.strip() + '\n')
+          "
+
       - name: Create or Update GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: mobile-builds/abes-portal.apk
           name: ABES Portal Mobile ${{ github.ref_name }}
-          body: |
-            ## 📱 ABES Portal Android Release (${{ github.ref_name }})
-            
-            ### 🚀 What's New in ${{ github.ref_name }}:
-            - **Native Background Session Keep-Alive**: Runs an Android Foreground Service that pings `KeepSessionAlive.aspx` every 10 minutes to prevent the 20-minute Microsoft IIS timeout even when the app is closed.
-            - **Auto-Renewing Session Countdown**: Automatically extends your active login session when resuming the app or when the timer drops below 3 minutes.
-            - **Zero Worker Overhead**: 100% direct native phone-to-ERP communication via `CapacitorCookies` and direct native networking with 0 Cloudflare Worker costs.
-            - **Permanent Signature Keystore**: Updates install seamlessly over existing installations without package conflict errors.
-            - **Status Bar & Notch Safe Area**: Header cleanly avoids physical notch, punch-holes, and battery indicators.
-            - **In-App Auto-Updater**: Instant update prompts and manual checks right inside the mobile app.
-            - **OLED Dark Mode Optimization**: Pitch-black `#000000` battery saver design with high-contrast claymorphic cards.
-            
-            ### 📥 Installation Instructions:
-            1. Download **`abes-portal.apk`** from Assets below.
-            2. Tap **Install** (or update).
-            3. Enjoy continuous login without repetitive OTP requests!
+          body_path: release_body.md
           draft: false
           prerelease: false

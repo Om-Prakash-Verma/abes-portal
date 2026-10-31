@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Smartphone, Sparkles, Download } from 'lucide-react';
+import { APP_CONFIG } from '../config/appConfig';
 
 /**
  * 3D Claymorphic Interactive Mascot for Login Page
@@ -14,7 +15,7 @@ import { Smartphone, Sparkles, Download } from 'lucide-react';
 const ANNOUNCEMENT_MESSAGES = [
   { text: "Tired of 20-min OTP relogins? 🥱", tag: "NO MORE OTPS" },
   { text: "Download APK to stay logged in! ⚡", tag: "24/7 ACTIVE" },
-  { text: "Zero Relogin • Direct ERP Connection 🚀", tag: "GET APK v1.0.5" }
+  { text: "Zero Relogin • Direct ERP Connection 🚀", tag: `GET APK v${APP_CONFIG.version}` }
 ];
 
 export default function LoginMascot({
