@@ -2,6 +2,17 @@
 
 All notable changes to the ABES Portal web and mobile applications are documented in this file.
 
+## [1.1.0] - 2026-10-31
+
+### Added & Improved
+- **Revamped Profile Flyout**: Displays real ABES ERP college ID photo with smooth monogram fallback.
+- **Student Identity Badge**: Added branch & semester badge (`CSE • Sem V`) directly next to admission number.
+- **Dual Status Chips**: Replaced wrapping text with a clean 2-column status card (Active Student Status + 24/7 Background Heartbeat).
+- **Streamlined Appearance Row**: Replaced bulky 2-button box with a sleek 1-line theme toggle matching the app's visual rhythm.
+- **Visual Navigation Indicators**: Added subtle chevrons for profile modals and distinct violet branding for in-app updates.
+
+---
+
 ## [1.0.9] - 2026-10-31
 
 ### Added & Improved

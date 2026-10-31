@@ -1,6 +1,6 @@
 {
   "name": "abes-portal-mobile",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "description": "Native Android APK for ABES ERP Portal with zero worker usage",
   "private": true,
   "type": "module",
