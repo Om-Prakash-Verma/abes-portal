@@ -31,7 +31,7 @@ export default function Header({
   const menuRef = useRef(null);
 
   const formatTimer = (s) => {
-    if (!s || s <= 0) return 'Expired';
+    if (!s || s <= 0) return 'Auto-Renewing';
     const m = Math.floor(s / 60);
     const sec = s % 60;
     return `${m}m ${sec < 10 ? '0' : ''}${sec}s`;
@@ -219,19 +219,19 @@ export default function Header({
                   </div>
 
                   <div className="mt-2 flex items-center justify-between text-[11px]">
-                    <span className="text-slate-500 dark:text-slate-400 font-medium">ERP Session Life</span>
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">ERP Session Status</span>
                     <span
                       className={`inline-flex items-center gap-1 font-mono font-bold ${
                         sessionRemainingSec > 300
                           ? 'text-indigo-600 dark:text-indigo-400'
                           : sessionRemainingSec > 60
                           ? 'text-amber-600 dark:text-amber-400'
-                          : 'text-rose-600 dark:text-rose-400 animate-pulse'
+                          : 'text-emerald-600 dark:text-emerald-400'
                       }`}
                       title="Microsoft IIS ASP.NET 20-minute server session expiration clock"
                     >
                       <Clock className="w-3 h-3" />
-                      <span>{formatTimer(sessionRemainingSec)}</span>
+                      <span>{sessionRemainingSec > 0 ? `${formatTimer(sessionRemainingSec)} • Active` : 'Live (Auto-Sync 24/7)'}</span>
                     </span>
                   </div>
                 </div>

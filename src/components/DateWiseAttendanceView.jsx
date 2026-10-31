@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { fetchAllDateWiseAttendance } from '../services/api';
 
-export default function DateWiseAttendanceView({ semId, subjects, onSelectSubject }) {
+export default function DateWiseAttendanceView({ semId, subjects = [], onSelectSubject }) {
   const [dayGroups, setDayGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('ALL'); // 'ALL' | 'ABSENT_ONLY' | 'PRESENT_ONLY'
@@ -49,19 +49,12 @@ export default function DateWiseAttendanceView({ semId, subjects, onSelectSubjec
   const totalDays = dayGroups.length;
   const fullPresentDays = dayGroups.filter(d => d.totalAbsent === 0 && d.totalPresent > 0).length;
   const daysWithAbsents = dayGroups.filter(d => d.totalAbsent > 0).length;
-  const totalLecturesCount = dayGroups.reduce((acc, d) => acc + d.totalCount, 0);
-  const totalPresentCount = dayGroups.reduce((acc, d) => acc + d.totalPresent, 0);
-  const overallAvg = totalLecturesCount > 0
-    ? Number(((totalPresentCount / totalLecturesCount) * 100).toFixed(1))
-    : 0;
 
   // Filter & Search
   let displayedDays = dayGroups.filter(day => {
-    // Filter by type
     if (filter === 'ABSENT_ONLY' && day.totalAbsent === 0) return false;
     if (filter === 'PRESENT_ONLY' && day.totalAbsent > 0) return false;
 
-    // Search query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const matchesDate = (day.date || '').toLowerCase().includes(q) ||
@@ -78,152 +71,79 @@ export default function DateWiseAttendanceView({ semId, subjects, onSelectSubjec
   });
 
   // Sort by date
-  displayedDays = [...displayedDays].sort((a, b) => {
-    if (sortOrder === 'desc') return b.timestamp - a.timestamp;
-    return a.timestamp - b.timestamp;
+  displayedDays.sort((a, b) => {
+    const parse = (dStr) => {
+      if (!dStr) return 0;
+      const parts = dStr.split(/[-/]/);
+      if (parts.length === 3) {
+        return new Date(parts[2], parts[1] - 1, parts[0]).getTime();
+      }
+      return new Date(dStr).getTime() || 0;
+    };
+    const tA = parse(a.date);
+    const tB = parse(b.date);
+    return sortOrder === 'desc' ? tB - tA : tA - tB;
   });
 
   if (loading) {
     return (
-      <div className="clay-card py-28 flex flex-col items-center justify-center text-slate-400">
-        <Loader2 className="w-9 h-9 animate-spin text-indigo-600 mb-3" />
-        <p className="text-sm font-extrabold text-slate-800">Compiling Date-Wise Attendance Timeline...</p>
-        <p className="text-xs text-slate-500 font-medium mt-1">Aggregating daily lecture records across all registered subjects</p>
+      <div className="py-24 flex flex-col items-center justify-center text-slate-400">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mb-2.5" />
+        <p className="text-xs font-black text-slate-700 dark:text-slate-300">Loading Daily Attendance Timeline...</p>
+        <p className="text-[11px] text-slate-500 font-medium mt-0.5">Fetching day-by-day logs from ERP</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-5">
-      {/* Date-Wise KPI Executive Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        
-        {/* Total Working Days with Lectures */}
-        <div className="clay-card p-4 sm:p-5 flex items-center justify-between">
-          <div>
-            <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider block">
-              Active Days
-            </span>
-            <span className="text-xl sm:text-2xl font-black text-slate-900 mt-1 block tabular-nums">
-              {totalDays} <span className="text-xs font-semibold text-slate-500">Days</span>
-            </span>
-            <span className="text-[10px] sm:text-[11px] font-bold text-indigo-700 mt-0.5 block">
-              {totalLecturesCount} total lectures held
-            </span>
-          </div>
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 shadow-clay-primary">
-            <CalendarDays className="w-5 h-5 sm:w-6 sm:h-6" />
-          </div>
-        </div>
-
-        {/* 100% Present Days */}
-        <div className="clay-card p-4 sm:p-5 flex items-center justify-between">
-          <div>
-            <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider block">
-              Full Attendance
-            </span>
-            <span className="text-xl sm:text-2xl font-black text-emerald-700 mt-1 block tabular-nums">
-              {fullPresentDays} <span className="text-xs font-semibold text-slate-500">Days</span>
-            </span>
-            <span className="text-[10px] sm:text-[11px] font-bold text-emerald-800 mt-0.5 block flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-emerald-600 inline" /> 100% attendance rate
-            </span>
-          </div>
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 shadow-clay-success">
-            <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6" />
-          </div>
-        </div>
-
-        {/* Days with Absents (Shortage) */}
-        <div className="clay-card p-4 sm:p-5 flex items-center justify-between">
-          <div>
-            <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider block">
-              Missed Sessions
-            </span>
-            <span className="text-xl sm:text-2xl font-black text-rose-700 mt-1 block tabular-nums">
-              {daysWithAbsents} <span className="text-xs font-semibold text-slate-500">Days</span>
-            </span>
-            <span className="text-[10px] sm:text-[11px] font-bold text-rose-700 mt-0.5 block">
-              Days with &ge;1 absent
-            </span>
-          </div>
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 shadow-clay-danger">
-            <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6" />
-          </div>
-        </div>
-
-        {/* Overall Timeline Score */}
-        <div className="clay-card p-4 sm:p-5 flex items-center justify-between">
-          <div>
-            <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider block">
-              Aggregate Rate
-            </span>
-            <span className="text-xl sm:text-2xl font-black text-slate-900 mt-1 block tabular-nums">
-              {overallAvg}%
-            </span>
-            <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 mt-0.5 block">
-              {totalPresentCount} of {totalLecturesCount} attended
-            </span>
-          </div>
-          <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center shrink-0 ${
-            overallAvg >= 75
-              ? 'bg-emerald-100 text-emerald-700 shadow-clay-success'
-              : 'bg-rose-100 text-rose-700 shadow-clay-danger'
-          }`}>
-            <span className="text-xs font-black">{overallAvg >= 75 ? 'SAFE' : 'LOW'}</span>
-          </div>
-        </div>
-
-      </div>
-
-      {/* Date-Wise Filter & Search Toolbar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+    <div className="space-y-3.5">
+      
+      {/* ================= COMPACT TIMELINE CONTROLS & FILTER BAR ================= */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
         
         {/* Search */}
-        <div className="relative flex-1 sm:max-w-xs">
+        <div className="relative flex-1">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search dates, courses, codes..."
+            placeholder="Search dates, courses, or topics..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3.5 py-2 text-xs font-bold rounded-xl clay-inset text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            className="w-full pl-9 pr-3.5 py-2 text-xs font-bold rounded-xl bg-slate-200/60 dark:bg-white/5 border border-slate-300/60 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
           />
         </div>
 
         {/* Filter Pills and Sort Toggle */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-          <div className="clay-inset p-1 rounded-xl flex items-center gap-1 text-xs shrink-0">
+        <div className="flex items-center justify-between sm:justify-start gap-2">
+          <div className="bg-slate-200/70 dark:bg-white/5 border border-slate-300/40 dark:border-white/10 p-0.5 rounded-xl flex items-center text-xs">
             <button
               onClick={() => setFilter('ALL')}
-              className={`px-3 py-1 rounded-lg font-bold transition text-xs whitespace-nowrap ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-black transition ${
                 filter === 'ALL'
-                  ? 'bg-indigo-600 text-white shadow-clay-primary'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white dark:bg-indigo-600 text-slate-900 dark:text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400'
               }`}
             >
-              All Days ({totalDays})
+              All ({totalDays})
             </button>
             <button
               onClick={() => setFilter('ABSENT_ONLY')}
-              className={`px-3 py-1 rounded-lg font-bold transition text-xs flex items-center gap-1 whitespace-nowrap ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-black transition ${
                 filter === 'ABSENT_ONLY'
-                  ? 'bg-rose-600 text-white shadow-clay-danger'
-                  : 'text-rose-700 hover:text-rose-900'
+                  ? 'bg-rose-500 text-white shadow-sm'
+                  : 'text-rose-600 dark:text-rose-400'
               }`}
             >
-              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
               Missed ({daysWithAbsents})
             </button>
             <button
               onClick={() => setFilter('PRESENT_ONLY')}
-              className={`px-3 py-1 rounded-lg font-bold transition text-xs flex items-center gap-1 whitespace-nowrap ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-black transition ${
                 filter === 'PRESENT_ONLY'
-                  ? 'bg-emerald-600 text-white shadow-clay-success'
-                  : 'text-emerald-700 hover:text-emerald-900'
+                  ? 'bg-emerald-500 text-white shadow-sm'
+                  : 'text-emerald-600 dark:text-emerald-400'
               }`}
             >
-              <CheckCircle className="w-3.5 h-3.5 shrink-0" />
               Full ({fullPresentDays})
             </button>
           </div>
@@ -231,78 +151,68 @@ export default function DateWiseAttendanceView({ semId, subjects, onSelectSubjec
           {/* Sort order toggle */}
           <button
             onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
-            className="clay-btn p-2 px-3 text-xs font-bold text-slate-700 flex items-center gap-1.5 shrink-0"
-            title="Sort Date Order"
+            className="p-2 rounded-xl bg-slate-200/70 dark:bg-white/5 border border-slate-300/40 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:text-indigo-600 transition shrink-0"
+            title={sortOrder === 'desc' ? 'Sorted: Newest First' : 'Sorted: Oldest First'}
           >
-            <ArrowUpDown className="w-3.5 h-3.5 text-indigo-600" />
-            <span className="hidden sm:inline">
-              {sortOrder === 'desc' ? 'Newest First' : 'Oldest First'}
-            </span>
+            <ArrowUpDown className="w-3.5 h-3.5 text-indigo-500" />
           </button>
         </div>
 
       </div>
 
-      {/* Date-Wise Timeline Stream */}
+      {/* ================= TIMELINE ACTIVITY STREAM ================= */}
       {displayedDays.length === 0 ? (
-        <div className="clay-card py-20 text-center p-8">
-          <Calendar className="w-10 h-10 text-slate-400 mx-auto mb-3" />
-          <p className="text-sm font-extrabold text-slate-700">
-            No attendance records found matching this filter
+        <div className="clay-card py-16 text-center p-6 bg-white/60 dark:bg-white/5 rounded-2xl border border-slate-200/80 dark:border-white/10">
+          <Calendar className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+          <p className="text-xs font-extrabold text-slate-700 dark:text-slate-300">
+            No attendance records matching this search or filter
           </p>
           <button
             onClick={() => { setSearchQuery(''); setFilter('ALL'); }}
-            className="mt-3 text-xs text-indigo-600 font-extrabold hover:underline"
+            className="mt-2 text-xs text-indigo-600 dark:text-indigo-400 font-black hover:underline"
           >
             Reset timeline filters
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {displayedDays.map((dayGroup) => {
             const isFullPresent = dayGroup.totalAbsent === 0;
             const hasAbsent = dayGroup.totalAbsent > 0;
 
             const badgeBg = isFullPresent
-              ? 'bg-emerald-100 text-emerald-800 shadow-clay-success'
-              : 'bg-rose-100 text-rose-800 shadow-clay-danger';
+              ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300/40'
+              : 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-300/40';
 
             return (
               <div
                 key={dayGroup.date}
-                className="clay-card p-4 sm:p-5 transition hover:shadow-lg"
+                className="p-3.5 sm:p-4 rounded-2xl bg-white/90 dark:bg-[#0D0D12] border border-slate-200/80 dark:border-white/10 shadow-sm transition hover:shadow-md"
               >
-                {/* Date Header Row */}
-                <div className="flex flex-wrap items-center justify-between gap-2.5 pb-3.5 border-b border-slate-200/80">
-                  <div className="flex items-center gap-2.5">
-                    <div className="clay-inset p-2 rounded-xl text-indigo-600">
-                      <Calendar className="w-4 h-4" />
+                {/* Clean Date Header Row */}
+                <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100 dark:border-white/5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                      <Calendar className="w-3.5 h-3.5" />
                     </div>
                     <div>
-                      <h4 className="text-sm sm:text-base font-extrabold text-slate-900">
+                      <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-tight">
                         {dayGroup.formattedDate || dayGroup.date}
                       </h4>
-                      <p className="text-[11px] text-slate-500 font-medium">
-                        {dayGroup.totalCount} {dayGroup.totalCount === 1 ? 'Lecture' : 'Lectures'} Conducted
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                        {dayGroup.totalPresent} of {dayGroup.totalCount} {dayGroup.totalCount === 1 ? 'Lecture' : 'Lectures'} Attended
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-600 hidden sm:inline tabular-nums">
-                      <strong className="text-emerald-700">{dayGroup.totalPresent} Present</strong>
-                      {hasAbsent && (
-                        <> • <strong className="text-rose-700">{dayGroup.totalAbsent} Absent</strong></>
-                      )}
-                    </span>
-                    <span className={`text-xs font-black px-3 py-1 rounded-full tabular-nums ${badgeBg}`}>
-                      {dayGroup.percentage}% Attendance
-                    </span>
-                  </div>
+                  {/* Attendance Percentage Badge */}
+                  <span className={`text-[11px] font-black px-2.5 py-0.5 rounded-full tabular-nums ${badgeBg}`}>
+                    {dayGroup.percentage}%
+                  </span>
                 </div>
 
-                {/* Day's Lectures List */}
-                <div className="mt-3.5 space-y-2.5">
+                {/* Day's Lecture Feed Rows */}
+                <div className="mt-2.5 space-y-1.5">
                   {dayGroup.lectures.map((lec, idx) => {
                     const isPresent = lec.Attendance === 'P';
                     return (
@@ -314,53 +224,49 @@ export default function DateWiseAttendanceView({ semId, subjects, onSelectSubjec
                             if (fullSub) onSelectSubject(fullSub);
                           }
                         }}
-                        className={`p-3 rounded-xl flex items-center justify-between gap-3 transition cursor-pointer group ${
+                        className={`py-2 px-2.5 rounded-xl flex items-center justify-between gap-2.5 transition cursor-pointer group ${
                           isPresent
-                            ? 'clay-btn border-l-4 border-l-emerald-500'
-                            : 'clay-btn border-l-4 border-l-rose-500'
+                            ? 'bg-emerald-50/50 dark:bg-emerald-950/10 hover:bg-emerald-100/60 dark:hover:bg-emerald-950/30'
+                            : 'bg-rose-50/50 dark:bg-rose-950/10 hover:bg-rose-100/60 dark:hover:bg-rose-950/30'
                         }`}
                       >
-                        <div className="flex items-start gap-3 min-w-0">
-                          <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          {/* Present/Absent Indicator */}
+                          <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${
                             isPresent
-                              ? 'bg-emerald-100 text-emerald-700 shadow-clay-success'
-                              : 'bg-rose-100 text-rose-700 shadow-clay-danger'
+                              ? 'text-emerald-600 dark:text-emerald-400'
+                              : 'text-rose-600 dark:text-rose-400'
                           }`}>
                             {isPresent ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
                           </div>
 
                           <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[11px] font-mono font-bold uppercase text-indigo-700 clay-inset px-2 py-0.5 rounded">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] font-mono font-black uppercase text-indigo-700 dark:text-indigo-400 bg-white dark:bg-white/10 px-1.5 py-0.5 rounded">
                                 {lec.SubCollegeCode}
                               </span>
-                              <span className="text-[10px] text-slate-500 clay-inset px-1.5 py-0.5 rounded font-bold">
-                                {lec.NoOfLecture} {lec.NoOfLecture === 1 ? 'Lecture' : 'Lectures'}
-                              </span>
+                              <h5 className="text-xs font-black text-slate-800 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                {lec.SubName}
+                              </h5>
                             </div>
-                            <h5 className="text-xs sm:text-sm font-extrabold text-slate-900 group-hover:text-indigo-600 transition-colors mt-1 line-clamp-1">
-                              {lec.SubName}
-                            </h5>
                             {lec.Topic && lec.Topic !== 'Regular Lecture' && (
-                              <p className="text-[11px] text-slate-500 font-medium mt-0.5 flex items-center gap-1 truncate">
-                                <BookOpen className="w-3 h-3 text-slate-400 shrink-0" />
-                                <span className="truncate">{lec.Topic}</span>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                                {lec.Topic}
                               </p>
                             )}
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className={`text-[11px] sm:text-xs font-black px-2.5 sm:px-3 py-1 rounded-full ${
+                        {/* Status Label & Action */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${
                             isPresent
-                              ? 'bg-emerald-100 text-emerald-800 shadow-clay-success'
-                              : 'bg-rose-100 text-rose-800 shadow-clay-danger'
+                              ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
+                              : 'bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300'
                           }`}>
                             {isPresent ? 'Present' : 'Absent'}
                           </span>
-                          <span className="text-slate-400 group-hover:text-indigo-600 hidden sm:inline-flex items-center text-xs font-bold">
-                            Subject Logs <ChevronRight className="w-3.5 h-3.5" />
-                          </span>
+                          <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition-transform" />
                         </div>
                       </div>
                     );

@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { trackApkDownloadClick } from '../utils/analytics';
 
-export const LATEST_APK_VERSION = '1.0.7';
+export const LATEST_APK_VERSION = '1.0.8';
 const GITHUB_RELEASES_URL = 'https://github.com/Om-Prakash-Verma/abes-portal/releases/latest';
 const DIRECT_APK_DOWNLOAD_URL = 'https://github.com/Om-Prakash-Verma/abes-portal/releases/latest/download/abes-portal.apk';
 
