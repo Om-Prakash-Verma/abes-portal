@@ -4,8 +4,8 @@ import { getStoredCookie } from './api';
 const SessionKeeper = registerPlugin('SessionKeeper');
 
 /**
- * Start native Android Foreground Service to ping KeepSessionAlive.aspx
- * every 10 minutes even when the app is minimized or closed.
+ * Start native Android Foreground Service to ping Home/Student/Default.aspx
+ * every 10 minutes even when the app is minimized, screen off, or closed.
  */
 export async function startBackgroundSessionKeeper(explicitCookie = null) {
   if (!Capacitor.isNativePlatform()) return;
@@ -36,7 +36,7 @@ export async function stopBackgroundSessionKeeper() {
 }
 
 /**
- * Trigger an immediate one-off ping to KeepSessionAlive.aspx
+ * Trigger an immediate one-off ping to Home/Student/Default.aspx
  */
 export async function pingSessionNow() {
   if (!Capacitor.isNativePlatform()) return;
@@ -53,12 +53,12 @@ export async function pingSessionNow() {
  */
 export async function getSessionKeeperStatus() {
   if (!Capacitor.isNativePlatform()) {
-    return { isRunning: false, lastPingTimestamp: 0 };
+    return { isRunning: false, lastPingTimestamp: 0, currentCookie: '', isExpired: false };
   }
 
   try {
     return await SessionKeeper.getStatus();
   } catch (err) {
-    return { isRunning: false, lastPingTimestamp: 0 };
+    return { isRunning: false, lastPingTimestamp: 0, currentCookie: '', isExpired: false };
   }
 }

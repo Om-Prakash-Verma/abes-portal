@@ -2,6 +2,16 @@
 
 All notable changes to the ABES Portal web and mobile applications are documented in this file.
 
+## [1.1.1] - 2026-11-07
+
+### Fixed
+- **Persistent Session Keep-Alive Fix**: Switched keep-alive heartbeat endpoint from non-existent `/KeepSessionAlive.aspx` to the real authenticated student landing page `/Home/Student/Default.aspx`.
+- **Sliding Cookie Renewal**: Automatically capture and persist refreshed `MyAuth` and `ASP.NET_SessionId` tokens across both native Android storage and web storage.
+- **Doze Mode & Deep Sleep Heartbeat**: Migrated background execution to Android `AlarmManager.setExactAndAllowWhileIdle()` with wake lock protection, ensuring the 10-minute ping fires even when the phone is in deep sleep.
+- **Task Removal Resilience**: Preserved foreground keep-alive alarms when the app is swiped away from recent apps.
+
+---
+
 ## [1.1.0] - 2026-10-31
 
 ### Added & Improved

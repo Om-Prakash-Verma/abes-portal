@@ -126,6 +126,32 @@ export function clearAllCaches() {
   } catch (e) {}
 }
 
+// Helper: Merge existing cookie string with newly received Set-Cookie headers
+export function mergeCookies(oldStr, newStr) {
+  const map = new Map();
+  if (oldStr) {
+    oldStr.split(';').forEach(c => {
+      const parts = c.trim().split('=');
+      if (parts[0] && parts.length > 1) {
+        map.set(parts[0].trim(), parts.slice(1).join('='));
+      }
+    });
+  }
+  if (newStr) {
+    newStr.split(';').forEach(c => {
+      const parts = c.trim().split('=');
+      if (parts[0] && parts.length > 1) {
+        const key = parts[0].trim();
+        const val = parts.slice(1).join('=');
+        if (val) {
+          map.set(key, val);
+        }
+      }
+    });
+  }
+  return Array.from(map.entries()).map(([k, v]) => `${k}=${v}`).join('; ');
+}
+
 // Helper: Read all cookies from native Android cookie manager
 async function getNativeCookiesString() {
   try {
@@ -139,24 +165,41 @@ async function getNativeCookiesString() {
 }
 
 /**
- * Pings KeepSessionAlive.aspx directly to reset the 20-minute IIS timeout window.
+ * Pings Home/Student/Default.aspx directly to reset the 20-minute IIS timeout window
+ * and captures any sliding expiration Set-Cookie headers.
  */
 export async function pingKeepSessionAlive() {
   try {
-    const cookies = await getNativeCookiesString();
+    let cookies = await getNativeCookiesString();
+    if (!cookies) cookies = getStoredCookie();
     if (!cookies) return false;
 
     const res = await CapacitorHttp.get({
-      url: `${ERP_BASE_URL}/KeepSessionAlive.aspx`,
+      url: `${ERP_BASE_URL}/Home/Student/Default.aspx`,
       headers: {
         'Cookie': cookies,
-        'User-Agent': 'Mozilla/5.0 (Linux; Android 14) ABESPortalMobile/1.0'
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36',
+        'Referer': `${ERP_BASE_URL}/Home/Student/Default.aspx`
       },
       disableRedirects: true
     });
 
-    if (res.status === 200) {
+    const bodyStr = typeof res.data === 'string' ? res.data : '';
+    const isLogin = bodyStr.includes('Login.aspx') || bodyStr.includes('Login Form') || bodyStr.includes('txtuser');
+
+    if (res.status === 200 && !isLogin) {
       setSessionStartTime(Date.now());
+
+      // Capture sliding session cookie update
+      const rawSetCookie = res.headers?.['set-cookie'] || res.headers?.['Set-Cookie'];
+      if (rawSetCookie) {
+        const scArray = Array.isArray(rawSetCookie) ? rawSetCookie : [rawSetCookie];
+        const newPart = scArray.map(c => c.split(';')[0].trim()).filter(Boolean).join('; ');
+        if (newPart) {
+          const merged = mergeCookies(cookies, newPart);
+          setStoredCookie(merged);
+        }
+      }
       return true;
     }
     return false;
@@ -298,7 +341,8 @@ export async function verifyLoginOtp({ username, password, otp, viewState, sessi
 
 // Low-level helper: native direct request to ERP endpoints (0 Worker usage)
 async function fetchErp(endpoint, method = 'POST', payload = null) {
-  const cookie = getStoredCookie();
+  let cookie = await getNativeCookiesString();
+  if (!cookie) cookie = getStoredCookie();
   if (!cookie) throw new Error('NO_SESSION');
 
   const cleanEndpoint = endpoint.replace(/^\//, '');
@@ -310,10 +354,21 @@ async function fetchErp(endpoint, method = 'POST', payload = null) {
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
       'Cookie': cookie,
-      'Referer': `${ERP_BASE_URL}/`
+      'Referer': `${ERP_BASE_URL}/Home/Student/Default.aspx`
     },
     data: payload ? payload : undefined
   });
+
+  // Capture sliding session cookie renewal if returned in headers
+  const rawSetCookie = res.headers?.['set-cookie'] || res.headers?.['Set-Cookie'];
+  if (rawSetCookie) {
+    const scArray = Array.isArray(rawSetCookie) ? rawSetCookie : [rawSetCookie];
+    const newPart = scArray.map(c => c.split(';')[0].trim()).filter(Boolean).join('; ');
+    if (newPart) {
+      const merged = mergeCookies(cookie, newPart);
+      setStoredCookie(merged);
+    }
+  }
 
   if (res.status === 401 || res.status === 403) {
     if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('abes:session_expired'));
@@ -322,7 +377,7 @@ async function fetchErp(endpoint, method = 'POST', payload = null) {
 
   let json = res.data;
   if (typeof json === 'string') {
-    if (json.includes('Login.aspx')) {
+    if (json.includes('Login.aspx') || json.includes('Login Form')) {
       if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('abes:session_expired'));
       throw new Error('SESSION_EXPIRED');
     }

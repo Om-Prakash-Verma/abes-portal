@@ -86,10 +86,14 @@ public class SessionKeeperPlugin extends Plugin {
         SharedPreferences prefs = context.getSharedPreferences(SessionKeeperService.PREFS_NAME, Context.MODE_PRIVATE);
         boolean isRunning = prefs.getBoolean(SessionKeeperService.KEY_IS_RUNNING, false);
         long lastPing = prefs.getLong(SessionKeeperService.KEY_LAST_PING, 0);
+        String currentCookie = prefs.getString(SessionKeeperService.KEY_COOKIE, null);
+        boolean isExpired = prefs.getBoolean(SessionKeeperService.KEY_SESSION_EXPIRED, false);
 
         JSObject ret = new JSObject();
         ret.put("isRunning", isRunning);
         ret.put("lastPingTimestamp", lastPing);
+        ret.put("currentCookie", currentCookie != null ? currentCookie : "");
+        ret.put("isExpired", isExpired);
         call.resolve(ret);
     }
 }

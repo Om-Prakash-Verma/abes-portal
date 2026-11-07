@@ -16,6 +16,7 @@ import {
   getAvailableSemesters,
   hasValidSession,
   clearSession,
+  setStoredCookie,
   getCachedItem,
   TTL_PROFILE,
   getSessionRemainingSeconds,
@@ -45,8 +46,13 @@ export default function App() {
     const syncSession = async () => {
       try {
         const status = await getSessionKeeperStatus();
-        if (status && status.lastPingTimestamp > 0) {
-          setSessionStartTime(status.lastPingTimestamp);
+        if (status) {
+          if (status.lastPingTimestamp > 0) {
+            setSessionStartTime(status.lastPingTimestamp);
+          }
+          if (status.currentCookie) {
+            setStoredCookie(status.currentCookie);
+          }
         }
       } catch (e) {}
 

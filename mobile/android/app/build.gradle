@@ -2,8 +2,8 @@ apply plugin: 'com.android.application'
 import groovy.json.JsonSlurper
 
 def versionPropsFile = file('../../../version.json')
-def appVersion = "1.1.0"
-def appVersionCode = 10
+def appVersion = "1.1.1"
+def appVersionCode = 11
 if (versionPropsFile.exists()) {
     def versionJson = new JsonSlurper().parse(versionPropsFile)
     appVersion = versionJson.version
